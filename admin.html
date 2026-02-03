@@ -263,27 +263,63 @@ th { background: #ff523b; color: white; }
 
 <!-- Edit Modal for Phases -->
 <div id="editPhasesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
-  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px;">
-    <h2>Edit Phases</h2>
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 400px;">
+    <h2 style="color: #ff523b; margin-bottom: 20px;">Edit Phases</h2>
     <form id="editPhasesForm">
-      <label>Balance: <input id="editPhasesBalance" type="number" step="0.01" required></label><br>
-      <label>Withdrawable Profit: <input id="editPhasesWithdrawable" type="number" step="0.01" required></label><br>
-      <label>Company Profit: <input id="editPhasesCompany" type="number" step="0.01" required></label><br>
-      <label>Total Profit: <input id="editPhasesTotal" type="number" step="0.01" required></label><br>
-      <label>Days: <input id="editPhasesDays" type="number" required></label><br>
-      <label>Software Fee: 
-        <select id="editPhasesAppFee" required>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Balance:</label>
+        <input id="editPhasesBalance" type="number" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Withdrawable Profit (50%):</label>
+        <input id="editPhasesWithdrawable" type="number" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <small style="color: #666; font-size: 12px;">Changes auto-update total</small>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Company Profit (50%):</label>
+        <input id="editPhasesCompany" type="number" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <small style="color: #666; font-size: 12px;">Changes auto-update total</small>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Total Profit:</label>
+        <input id="editPhasesTotal" type="number" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <small style="color: #666; font-size: 12px;">Auto-splits 50/50 when changed</small>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Days:</label>
+        <input id="editPhasesDays" type="number" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Software Fee:</label>
+        <select id="editPhasesAppFee" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
           <option value="">Select</option>
           <option value="Paid">Paid</option>
           <option value="Unpaid">Unpaid</option>
         </select>
-      </label><br>
-      <button type="submit">Update</button>
-      <button type="button" onclick="closeModal()">Cancel</button>
+      </div>
+      
+      <div style="display: flex; gap: 10px;">
+        <button type="submit" style="background: #ff523b; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">
+          Update
+        </button>
+        <button type="button" onclick="closeModal()" style="background: #666; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; flex: 1;">
+          Cancel
+        </button>
+      </div>
+      
+      <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 12px; color: #666;">
+        <strong>Auto-calculation:</strong><br>
+        • Edit withdrawable/company → Total updates<br>
+        • Edit total → Splits 50/50 automatically
+      </div>
     </form>
   </div>
 </div>
-
 <!-- Rejection Modal for Manual Message -->
 <div id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
   <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px;">
@@ -885,17 +921,83 @@ function openEditPhasesModal(uid2) {
     .then(snapshot => {
       const user = snapshot.val();
       if (user) {
-        document.getElementById("editPhasesBalance").value = user.balance || "";
-        document.getElementById("editPhasesWithdrawable").value = user.withdrawableProfit || "";
-        document.getElementById("editPhasesCompany").value = user.companyProfit || "";
-        document.getElementById("editPhasesTotal").value = user.totalProfit || "";
+        const balance = parseFloat(user.balance || 0);
+        const withdrawable = parseFloat(user.withdrawableProfit || 0);
+        const company = parseFloat(user.companyProfit || 0);
+        const total = parseFloat(user.totalProfit || 0);
+        
+        // If total doesn't match sum of parts, calculate it
+        const calculatedTotal = withdrawable + company;
+        const displayTotal = (total > 0 && total !== calculatedTotal) ? total : calculatedTotal;
+        
+        document.getElementById("editPhasesBalance").value = balance || "";
+        document.getElementById("editPhasesWithdrawable").value = withdrawable || "";
+        document.getElementById("editPhasesCompany").value = company || "";
+        document.getElementById("editPhasesTotal").value = displayTotal.toFixed(2);
         document.getElementById("editPhasesDays").value = user.days || "";
         document.getElementById("editPhasesAppFee").value = user.appFee || "";
+        
+        // Setup auto-calculation after values are set
+        setTimeout(() => {
+          setupPhaseProfitCalculation();
+        }, 100);
       }
     })
     .catch(err => {
       console.error("Error fetching phases data:", err);
     });
+}
+
+// 🔹 Auto-calculate profits when editing phases
+function setupPhaseProfitCalculation() {
+  const withdrawableInput = document.getElementById('editPhasesWithdrawable');
+  const companyInput = document.getElementById('editPhasesCompany');
+  const totalInput = document.getElementById('editPhasesTotal');
+  
+  if (!withdrawableInput || !companyInput || !totalInput) return;
+  
+  // Function to calculate total from withdrawable + company
+  function calculateTotalFromParts() {
+    const withdrawable = parseFloat(withdrawableInput.value) || 0;
+    const company = parseFloat(companyInput.value) || 0;
+    const total = withdrawable + company;
+    totalInput.value = total.toFixed(2);
+  }
+  
+  // Function to split total 50/50
+  function splitTotalEqually() {
+    const total = parseFloat(totalInput.value) || 0;
+    const half = total / 2;
+    withdrawableInput.value = half.toFixed(2);
+    companyInput.value = half.toFixed(2);
+  }
+  
+  // Function to auto-calculate based on which field was changed last
+  function handleFieldChange(sourceField) {
+    const withdrawable = parseFloat(withdrawableInput.value) || 0;
+    const company = parseFloat(companyInput.value) || 0;
+    const total = parseFloat(totalInput.value) || 0;
+    
+    console.log('Field change detected:', sourceField, {withdrawable, company, total});
+    
+    if (sourceField === 'withdrawable' || sourceField === 'company') {
+      // If withdrawable or company changed, update total
+      calculateTotalFromParts();
+    } else if (sourceField === 'total') {
+      // If total changed, split 50/50
+      splitTotalEqually();
+    }
+  }
+  
+  // Add event listeners for real-time calculation
+  withdrawableInput.addEventListener('input', () => handleFieldChange('withdrawable'));
+  companyInput.addEventListener('input', () => handleFieldChange('company'));
+  totalInput.addEventListener('input', () => handleFieldChange('total'));
+  
+  // Also add event listeners for when user leaves the field (blur)
+  withdrawableInput.addEventListener('blur', () => handleFieldChange('withdrawable'));
+  companyInput.addEventListener('blur', () => handleFieldChange('company'));
+  totalInput.addEventListener('blur', () => handleFieldChange('total'));
 }
 
 // 🔹 Handle edit phases form submission

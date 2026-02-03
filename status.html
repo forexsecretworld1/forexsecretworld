@@ -79,51 +79,152 @@
   </script>
 
   <script>
-  const statusContainer = document.getElementById("statusContainer");
+const statusContainer = document.getElementById("statusContainer");
 
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (!user) {
-      statusContainer.innerHTML = "<p>Please log in to see your request status.</p>";
-      return;
-    }
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) {
+    statusContainer.innerHTML = "<p>Please log in to see your request status.</p>";
+    window.location.href = "login.html";
+    return;
+  }
 
-    // 🔹 Fetch all requests
-    firebase.database().ref("usersRequestingFunds").once("value")
-      .then(function(snapshot) {
-        if (snapshot.exists()) {
-          const requests = snapshot.val();
+  // Check if user has an active trading account (uid2 exists)
+  firebase.database().ref('userInfo/' + user.uid + '/uid2').once('value')
+    .then(uid2Snapshot => {
+      const uid2 = uid2Snapshot.val();
+      let hasActiveAccount = false;
+      
+      if (uid2) {
+        return firebase.database().ref('users/' + uid2).once('value')
+          .then(tradingAccountSnapshot => {
+            hasActiveAccount = tradingAccountSnapshot.exists();
+            return hasActiveAccount;
+          });
+      }
+      return false;
+    })
+    .then(hasActiveAccount => {
+      // Check for pending requests
+      return firebase.database().ref("usersRequestingFunds").orderByChild("uid").equalTo(user.uid).once("value")
+        .then(requestsSnapshot => {
+          let hasPendingRequest = false;
           let latestRequest = null;
-
-          // Find the latest request for this user
-          Object.keys(requests).forEach(function(key) {
-            const data = requests[key];
-            if (data.uid === user.uid) {
-              if (!latestRequest || data.submittedAt > latestRequest.submittedAt) {
-                latestRequest = data;
+          
+          if (requestsSnapshot.exists()) {
+            const requests = requestsSnapshot.val();
+            
+            // Find latest request
+            for (const key in requests) {
+              const request = requests[key];
+              if (!latestRequest || request.submittedAt > latestRequest.submittedAt) {
+                latestRequest = request;
+              }
+              
+              // Check if any request is pending
+              if (request.status === "Pending" || !request.status) {
+                hasPendingRequest = true;
               }
             }
-          });
-
-          if (latestRequest) {
-            statusContainer.innerHTML = `
-              <h3>Your trading funds request has been submitted successfully!</h3>
-              <p>Status: <strong style="color:${latestRequest.status === "Approved" ? "green" : "orange"};">
-                ${latestRequest.status}
-              </strong></p>
-              <p>Submitted at: ${new Date(latestRequest.submittedAt).toLocaleString()}</p>
-            `;
-          } else {
-            statusContainer.innerHTML = "<p>You have no trading funds requests yet.</p>";
           }
-        } else {
-          statusContainer.innerHTML = "<p>You have no trading funds requests yet.</p>";
-        }
-      })
-      .catch(function(err) {
-        console.error("Failed to fetch request status:", err);
-        statusContainer.innerHTML = "<p>Could not fetch request status. Please try again later.</p>";
-      });
-  });
+          
+          return { hasActiveAccount, hasPendingRequest, latestRequest };
+        });
+    })
+    .then(({ hasActiveAccount, hasPendingRequest, latestRequest }) => {
+      let html = `<h3>Trading Funds Status</h3>`;
+      
+      // Show status based on user's situation
+      if (hasActiveAccount) {
+        // User has active trading account (approved request)
+        html += `
+          <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin-top: 0;">✅ Active Trading Account</h4>
+            <p>Your trading funds request has been <strong>approved</strong> and your account is active.</p>
+            <p>Go to <a href="phases.html" style="color: #155724; font-weight: bold;">Phases</a> to start trading.</p>
+          </div>
+        `;
+        
+        // Don't show request button when account is active
+        html += `
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <p><strong>Note:</strong> You cannot request new funds while you have an active trading account.</p>
+            <p>Complete your phases to request new funds.</p>
+          </div>
+        `;
+        
+      } else if (hasPendingRequest && latestRequest) {
+        // User has pending request
+        const status = latestRequest.status || "Pending";
+        const submittedDate = new Date(latestRequest.submittedAt).toLocaleString();
+        
+        html += `
+          <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin-top: 0;">⏳ Request ${status}</h4>
+            <p>Your trading funds request is <strong>${status.toLowerCase()}</strong>.</p>
+            <p><strong>Submitted:</strong> ${submittedDate}</p>
+            <p>Please wait for admin approval. This usually takes 24-48 hours.</p>
+          </div>
+        `;
+        
+      } else {
+        // No active account and no pending request
+        html += `
+          <div style="background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h4 style="margin-top: 0;">📋 No Active Request</h4>
+            <p>You don't have any pending trading funds requests.</p>
+            <p>You can request trading funds to start your journey.</p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="request_funds.html" class="btn" style="display: inline-block; background: #ff523b; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; font-size: 16px; font-weight: bold;">
+              Request Trading Funds
+            </a>
+          </div>
+        `;
+      }
+      
+      // Show completed requests history if any
+      firebase.database().ref("usersRequestingFunds").orderByChild("uid").equalTo(user.uid).once("value")
+        .then(historySnapshot => {
+          if (historySnapshot.exists()) {
+            const requests = historySnapshot.val();
+            const completedRequests = [];
+            
+            for (const key in requests) {
+              const request = requests[key];
+              if (request.status === "Completed") {
+                completedRequests.push(request);
+              }
+            }
+            
+            if (completedRequests.length > 0) {
+              html += `<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">`;
+              html += `<h4>Previous Requests</h4>`;
+              
+              completedRequests.forEach((request, index) => {
+                const completedDate = request.completedAt ? new Date(request.completedAt).toLocaleString() : "N/A";
+                const payout = request.payoutAmount ? `$${parseFloat(request.payoutAmount).toFixed(2)}` : "N/A";
+                
+                html += `
+                  <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                    <p><strong>Request ${index + 1}:</strong> Completed on ${completedDate}</p>
+                    <p>Payout: ${payout}</p>
+                  </div>
+                `;
+              });
+              
+              html += `</div>`;
+            }
+          }
+          
+          statusContainer.innerHTML = html;
+        });
+    })
+    .catch(function(err) {
+      console.error("Error:", err);
+      statusContainer.innerHTML = "<p>Could not fetch request status. Please try again later.</p>";
+    });
+});
 </script>
 </body>
 </html>
