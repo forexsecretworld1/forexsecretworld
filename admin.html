@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - Forex Secret World</title>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+<script src="firebase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Poppins', sans-serif; background: #f9f9f9; margin: 0; }
+.header { background: radial-gradient(#fff,#ffd6d6); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+.header h2 { margin: 0; color: #ff523b; }
+.container { max-width: 1200px; margin: auto; padding: 20px; }
+input, select, textarea, button { padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; width: 100%; }
+textarea { resize: vertical; }
+button { background: #ff523b; color: white; border: none; cursor: pointer; transition: 0.3s; }
+button:hover { background: #563434; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { padding: 10px; border-bottom: 1px solid #ccc; text-align: left; }
+th { background: #ff523b; color: white; }
+.product-image { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
+.tabs { display: flex; margin-bottom: 20px; }
+.tab { padding: 10px 20px; cursor: pointer; border: 1px solid #ff523b; border-bottom: none; background: #fff; margin-right: 5px; border-top-left-radius: 5px; border-top-right-radius: 5px; }
+.tab.active { background: #ff523b; color: #fff; }
+.tab-content { display: none; background: #fff; padding: 20px; border: 1px solid #ff523b; border-radius: 5px; width:auto; }
+.tab-content.active { display: block; }
+.toast { position: fixed; top: 20px; right: 20px; background: #ff523b; color: white; padding: 10px 20px; border-radius: 5px; display: none; z-index: 9999; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h2>Admin Panel</h2>
+</div>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="openTab('productsTab')">Existing Products</div>
+    <div class="tab" onclick="openTab('pendingTab')">Pending Orders</div>
+    <div class="tab" onclick="openTab('RequestFunds')">Request</div>
+    <div class="tab" onclick="openTab('tradingTab')">Trading Accounts</div>
+    <div class="tab" onclick="openTab('userPasswordsTab')">User Passwords</div>
+    <div class="tab" onclick="openTab('phasesTab')">Phases</div>  <!-- New Phases Tab -->
+    <div class="tab" onclick="openTab('withdrawalsTab')">Withdrawals</div>
+  </div>
+
+  <!-- Existing Products Tab -->
+  <div id="productsTab" class="tab-content active">
+    <h3>Add / Update Product</h3>
+    <input type="hidden" id="productId">
+    <input type="text" id="productName" placeholder="Product Name">
+    <textarea id="productDesc" placeholder="Product Description"></textarea>
+    <input type="number" id="productPrice" placeholder="Price in USD">
+    <input type="file" id="productImageFile">
+    <select id="productCategory">
+      <option value="">Select Category</option>
+      <option value="books">Books</option>
+      <option value="indicators">Indicators</option>
+      <option value="robots">Robots</option>
+      <option value="combos">Combos</option>
+    </select>
+    <button onclick="addOrUpdateProduct()">Add / Update Product</button>
+
+    <h3>Existing Products</h3>
+    <table id="productsTable">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Pending Orders Tab -->
+  <div id="pendingTab" class="tab-content">
+    <h3>Pending Orders</h3>
+    <table id="ordersTable">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- RequestFunds Tab -->
+  <div id="RequestFunds" class="tab-content">
+    <h3>Pending</h3>
+    <table id="propfirm">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>User</th>
+          <th>Email</th>
+          <th>Submitted</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Trading Accounts Tab -->
+  <div id="tradingTab" class="tab-content">
+    <h3>Trading Accounts</h3>
+    <table id="tradingAccounts">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Account Name</th>
+          <th>Account Number</th>
+          <th>Balance</th>
+          <th>Software Fee</th>
+          <th>Email</th>
+          <th>Password</th>
+          <th>Account Password</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- New User Passwords Tab -->
+  <div id="userPasswordsTab" class="tab-content">
+    <h3>User Passwords</h3>
+    <table id="userPasswordsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Password</th>
+          <th>Account Password</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- New Phases Tab -->
+  <div id="phasesTab" class="tab-content">
+    <h3>Phases Management</h3>
+    <table id="phasesTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Account Name</th>
+          <th>Email</th>
+          <th>Balance</th>
+          <th>Withdrawable Profit</th>
+          <th>Company Profit</th>
+          <th>Total Profit</th>
+          <th>Days</th>
+          <th>Software Fee</th>
+          <th>Phases Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+<!-- Withdrawals Tab -->
+<div id="withdrawalsTab" class="tab-content">
+  <h3>Pending Withdrawals</h3>
+  <table id="withdrawalsTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>User</th>
+        <th>PayPal Email</th>
+        <th>Amount</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  
+  <h3>Approved/Completed Withdrawals</h3>
+  <table id="completedWithdrawalsTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>User</th>
+        <th>PayPal Email</th>
+        <th>Amount</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Completed Date</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+  <!-- Modal for approval form -->
+  <div id="approveModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px;">
+      <h2>Approve Request</h2>
+      <form id="approveForm">
+        <label>Account Name: <input id="accountName" required></label><br>
+        <label>Username: <input id="username" required></label><br>
+        <label>Password: <input id="password" type="password" required></label><br>
+        <label>Account Password: <input id="accountPassword" type="password" required></label><br>
+        <label>Email: <input id="email" type="email" required></label><br>
+        <label>Balance: <input id="balance" type="number" step="0.01" required></label><br>
+        <label>Software Fee: 
+          <select id="softwareFee" required>
+            <option value="">Select</option>
+            <option value="Paid">Paid</option>
+            <option value="Unpaid">Unpaid</option>
+          </select>
+        </label><br>
+        <button type="submit">Approve</button>
+        <button type="button" onclick="closeModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+<!-- Edit Modal for Trading Accounts -->
+<div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px;">
+    <h2>Edit Trading Account</h2>
+    <form id="editForm">
+      <label>Account Name: <input id="editAccountName" required></label><br>
+      <label>Account Password: <input id="editAccountPassword" type="password" required></label><br>
+      <label>Balance: <input id="editBalance" type="number" step="0.01" required></label><br>
+      <label>Software Fee: 
+        <select id="editSoftwareFee" required>
+          <option value="">Select</option>
+          <option value="Paid">Paid</option>
+          <option value="Unpaid">Unpaid</option>
+        </select>
+      </label><br>
+      <button type="submit">Update</button>
+      <button type="button" onclick="closeModal()">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal for Phases -->
+<div id="editPhasesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px;">
+    <h2>Edit Phases</h2>
+    <form id="editPhasesForm">
+      <label>Balance: <input id="editPhasesBalance" type="number" step="0.01" required></label><br>
+      <label>Withdrawable Profit: <input id="editPhasesWithdrawable" type="number" step="0.01" required></label><br>
+      <label>Company Profit: <input id="editPhasesCompany" type="number" step="0.01" required></label><br>
+      <label>Total Profit: <input id="editPhasesTotal" type="number" step="0.01" required></label><br>
+      <label>Days: <input id="editPhasesDays" type="number" required></label><br>
+      <label>Software Fee: 
+        <select id="editPhasesAppFee" required>
+          <option value="">Select</option>
+          <option value="Paid">Paid</option>
+          <option value="Unpaid">Unpaid</option>
+        </select>
+      </label><br>
+      <button type="submit">Update</button>
+      <button type="button" onclick="closeModal()">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- Rejection Modal for Manual Message -->
+<div id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px;">
+    <h2>Reject Request</h2>
+    <form id="rejectForm">
+      <label>Reason for Rejection:</label><br>
+      <textarea id="rejectionMessage" placeholder="Enter the message to send to the user..." required></textarea><br>
+      <button type="submit">Send Message and Delete Request</button>
+      <button type="button" onclick="closeModal()">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<script>
+ 
+// Global variable to track the current request UID being approved or edited
+let currentRequestUid = null;
+let currentUid2 = null; // For editing trading accounts
+
+// 🔹 Load and display pending requests in the table on page load
+firebase.database().ref("usersRequestingFunds").on("value", snapshot => {
+  const requests = snapshot.val();
+  const tbody = document.querySelector("#propfirm tbody");
+  tbody.innerHTML = ""; // Clear previous rows
+
+  if (!requests) {
+    // No requests: Add a single row spanning all columns
+    tbody.innerHTML = "<tr><td colspan='6'>No pending requests.</td></tr>";
+    return;
+  }
+
+  let index = 1; // For the # column (serial number)
+  for (const uid in requests) {
+    const req = requests[uid];
+    const row = document.createElement("tr");
+    row.classList.add("clickable-row"); // Add class for styling/click handling
+    row.innerHTML = `
+      <td>${index}</td>
+      <td>${req.fullName}</td>
+      <td>${req.email}</td>
+      <td>${new Date(req.submittedAt).toLocaleString()}</td>
+      <td>${req.status || "Pending"}</td>
+      <td>
+        <button onclick="openApproveModal('${uid}')">Approve</button>
+        <button onclick="openRejectModal('${uid}')">Reject</button>
+        <button onclick="deleteRequest('${uid}')">Delete</button>
+      </td>
+    `;
+    // Add click handler for expansion
+    row.addEventListener("click", () => toggleRowExpansion(row, req));
+    tbody.appendChild(row);
+
+    // Hidden expanded row (initially hidden) - now includes all submitted data
+    const expandedRow = document.createElement("tr");
+    expandedRow.classList.add("expanded-row");
+    expandedRow.style.display = "none";
+    expandedRow.innerHTML = `
+      <td colspan="6">
+        <div class="expanded-content">
+          <p><strong>Full Name:</strong> ${req.fullName}</p>
+          <p><strong>Email:</strong> ${req.email}</p>
+          <p><strong>Phone:</strong> ${req.phone || "N/A"}</p>
+          <p><strong>Country:</strong> ${req.country || "N/A"}</p>
+          <p><strong>Address:</strong> ${req.address || "N/A"}</p>
+          <p><strong>Suburb:</strong> ${req.suburb || "N/A"}</p>
+          <p><strong>City:</strong> ${req.city || "N/A"}</p>
+          <p><strong>Postal Code:</strong> ${req.postalCode || "N/A"}</p>
+          <p><strong>Province:</strong> ${req.province || "N/A"}</p>
+          <p><strong>Trading Experience:</strong> ${req.tradingExperience || "N/A"}</p>
+          <p><strong>Leverage Knowledge:</strong> ${req.leverageKnowledge || "N/A"}</p>
+          <p><strong>Stop Loss Knowledge:</strong> ${req.stopLossKnowledge || "N/A"}</p>
+          <p><strong>Risk Knowledge:</strong> ${req.riskKnowledge || "N/A"}</p>
+          <p><strong>Terms Accepted:</strong> ${req.termsAccepted ? "Yes" : "No"}</p>
+          <p><strong>Submitted At:</strong> ${new Date(req.submittedAt).toLocaleString()}</p>
+          <p><strong>Status:</strong> ${req.status || "Pending"}</p>
+          <p><strong>UID:</strong> ${req.uid}</p>
+        </div>
+      </td>
+    `;
+        tbody.appendChild(expandedRow);
+
+    index++;
+  }
+});
+
+// 🔹 Toggle row expansion
+function toggleRowExpansion(row, req) {
+  const nextRow = row.nextElementSibling;
+  if (nextRow && nextRow.classList.contains("expanded-row")) {
+    nextRow.style.display = nextRow.style.display === "none" ? "table-row" : "none";
+  }
+}
+
+// 🔹 Open reject modal
+function openRejectModal(uid) {
+  currentRequestUid = uid;
+  document.getElementById("rejectModal").style.display = "block";
+  document.getElementById("rejectForm").reset();
+}
+
+// 🔹 Handle reject form submission (send message manually and delete request)
+document.getElementById("rejectForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  if (!currentRequestUid) {
+    alert("No request selected.");
+    return;
+  }
+
+  const message = document.getElementById("rejectionMessage").value.trim();
+  if (!message) {
+    alert("Please enter a rejection message.");
+    return;
+  }
+
+  // Manually send message (alert for now, you can copy and send via email manually)
+  alert(`Rejection Message for user ${currentRequestUid}:\n\n${message}\n\nCopy this message and send it to the user manually.`);
+
+  // Delete the request
+  firebase.database().ref(`usersRequestingFunds/${currentRequestUid}`).remove()
+    .then(() => {
+      alert("Request deleted.");
+      closeModal();
+      // Refresh the table by re-running the load
+      firebase.database().ref("usersRequestingFunds").once("value", snapshot => {
+        const requests = snapshot.val();
+        const tbody = document.querySelector("#propfirm tbody");
+        tbody.innerHTML = "";
+        if (!requests) {
+          tbody.innerHTML = "<tr><td colspan='6'>No pending requests.</td></tr>";
+          return;
+        }
+        let index = 1;
+        for (const uid in requests) {
+          const req = requests[uid];
+          const row = document.createElement("tr");
+          row.classList.add("clickable-row");
+          row.innerHTML = `
+            <td>${index}</td>
+            <td>${req.fullName}</td>
+            <td>${req.email}</td>
+            <td>${new Date(req.submittedAt).toLocaleString()}</td>
+            <td>${req.status || "Pending"}</td>
+            <td>
+              <button onclick="openApproveModal('${uid}')">Approve</button>
+              <button onclick="openRejectModal('${uid}')">Reject</button>
+              <button onclick="deleteRequest('${uid}')">Delete</button>
+            </td>
+          `;
+          row.addEventListener("click", () => toggleRowExpansion(row, req));
+          tbody.appendChild(row);
+          const expandedRow = document.createElement("tr");
+          expandedRow.classList.add("expanded-row");
+          expandedRow.style.display = "none";
+          expandedRow.innerHTML = `
+            <td colspan="6">
+              <div class="expanded-content">
+                <p><strong>Full Name:</strong> ${req.fullName}</p>
+                <p><strong>Email:</strong> ${req.email}</p>
+                <p><strong>Phone:</strong> ${req.phone || "N/A"}</p>
+                <p><strong>Country:</strong> ${req.country || "N/A"}</p>
+                <p><strong>Address:</strong> ${req.address || "N/A"}</p>
+                <p><strong>Suburb:</strong> ${req.suburb || "N/A"}</p>
+                <p><strong>City:</strong> ${req.city || "N/A"}</p>
+                <p><strong>Postal Code:</strong> ${req.postalCode || "N/A"}</p>
+                <p><strong>Province:</strong> ${req.province || "N/A"}</p>
+                <p><strong>Trading Experience:</strong> ${req.tradingExperience || "N/A"}</p>
+                <p><strong>Leverage Knowledge:</strong> ${req.leverageKnowledge || "N/A"}</p>
+                <p><strong>Stop Loss Knowledge:</strong> ${req.stopLossKnowledge || "N/A"}</p>
+                <p><strong>Risk Knowledge:</strong> ${req.riskKnowledge || "N/A"}</p>
+                <p><strong>Terms Accepted:</strong> ${req.termsAccepted ? "Yes" : "No"}</p>
+                <p><strong>Submitted At:</strong> ${new Date(req.submittedAt).toLocaleString()}</p>
+                <p><strong>Status:</strong> ${req.status || "Pending"}</p>
+                <p><strong>UID:</strong> ${req.uid}</p>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(expandedRow);
+          index++;
+        }
+      });
+    })
+    .catch(err => {
+      console.error("Error refreshing table:", err);
+    });
+});
+
+// 🔹 Delete request (permanent removal)
+function deleteRequest(uid) {
+  if (confirm("Are you sure you want to delete this request permanently?")) {
+    firebase.database().ref(`usersRequestingFunds/${uid}`).remove()
+      .then(() => {
+        alert("Request deleted.");
+        // Refresh the table
+        firebase.database().ref("usersRequestingFunds").once("value", snapshot => {
+          const requests = snapshot.val();
+          const tbody = document.querySelector("#propfirm tbody");
+          tbody.innerHTML = "";
+          if (!requests) {
+            tbody.innerHTML = "<tr><td colspan='6'>No pending requests.</td></tr>";
+            return;
+          }
+          let index = 1;
+          for (const uid in requests) {
+            const req = requests[uid];
+            const row = document.createElement("tr");
+            row.classList.add("clickable-row");
+            row.innerHTML = `
+              <td>${index}</td>
+              <td>${req.fullName}</td>
+              <td>${req.email}</td>
+              <td>${new Date(req.submittedAt).toLocaleString()}</td>
+              <td>${req.status || "Pending"}</td>
+              <td>
+                <button onclick="openApproveModal('${uid}')">Approve</button>
+                <button onclick="openRejectModal('${uid}')">Reject</button>
+                <button onclick="deleteRequest('${uid}')">Delete</button>
+              </td>
+            `;
+            row.addEventListener("click", () => toggleRowExpansion(row, req));
+            tbody.appendChild(row);
+            const expandedRow = document.createElement("tr");
+            expandedRow.classList.add("expanded-row");
+            expandedRow.style.display = "none";
+            expandedRow.innerHTML = `
+              <td colspan="6">
+                <div class="expanded-content">
+                  <p><strong>Full Name:</strong> ${req.fullName}</p>
+                  <p><strong>Email:</strong> ${req.email}</p>
+                  <p><strong>Phone:</strong> ${req.phone || "N/A"}</p>
+                  <p><strong>Country:</strong> ${req.country || "N/A"}</p>
+                  <p><strong>Address:</strong> ${req.address || "N/A"}</p>
+                  <p><strong>Suburb:</strong> ${req.suburb || "N/A"}</p>
+                  <p><strong>City:</strong> ${req.city || "N/A"}</p>
+                  <p><strong>Postal Code:</strong> ${req.postalCode || "N/A"}</p>
+                  <p><strong>Province:</strong> ${req.province || "N/A"}</p>
+                  <p><strong>Trading Experience:</strong> ${req.tradingExperience || "N/A"}</p>
+                  <p><strong>Leverage Knowledge:</strong> ${req.leverageKnowledge || "N/A"}</p>
+                  <p><strong>Stop Loss Knowledge:</strong> ${req.stopLossKnowledge || "N/A"}</p>
+                  <p><strong>Risk Knowledge:</strong> ${req.riskKnowledge || "N/A"}</p>
+                  <p><strong>Terms Accepted:</strong> ${req.termsAccepted ? "Yes" : "No"}</p>
+                  <p><strong>Submitted At:</strong> ${new Date(req.submittedAt).toLocaleString()}</p>
+                  <p><strong>Status:</strong> ${req.status || "Pending"}</p>
+                  <p><strong>UID:</strong> ${req.uid}</p>
+                </div>
+              </td>
+            `;
+            tbody.appendChild(expandedRow);
+            index++;
+          }
+        });
+      })
+      .catch(err => {
+        console.error("Error deleting request:", err);
+        alert("Failed to delete request.");
+      });
+  }
+}
+
+// 🔹 Open the approval modal and set the current UID, then auto-fill form fields
+function openApproveModal(uid) {
+  currentRequestUid = uid;
+  document.getElementById("approveModal").style.display = "block";
+  document.getElementById("approveForm").reset(); // Reset form first
+
+  // Fetch the request data to auto-fill fields
+  firebase.database().ref(`usersRequestingFunds/${uid}`).once("value")
+    .then(snapshot => {
+      const req = snapshot.val();
+      if (req) {
+        // Auto-fill from the requesting user's data
+        document.getElementById("email").value = req.email || "";
+        document.getElementById("password").value = req.password || "";
+        document.getElementById("username").value = req.fullName || ""; // Username as fullName (default)
+      }
+    })
+    .catch(err => {
+      console.error("Error fetching request data:", err);
+    });
+}
+
+// 🔹 Close the modal
+function closeModal() {
+  document.getElementById("approveModal").style.display = "none";
+  document.getElementById("editModal").style.display = "none";
+  document.getElementById("editPhasesModal").style.display = "none";
+  document.getElementById("rejectModal").style.display = "none";
+  currentRequestUid = null;
+  currentUid2 = null;
+}
+
+// 🔹 Handle form submission for approval
+document.getElementById("approveForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  if (!currentRequestUid) {
+    alert("No request selected.");
+    return;
+  }
+
+  // Collect form data
+  const accountName = document.getElementById("accountName").value.trim();
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+  const accountPassword = document.getElementById("accountPassword").value;
+  const email = document.getElementById("email").value.trim();
+  const balance = parseFloat(document.getElementById("balance").value);
+  const softwareFee = document.getElementById("softwareFee").value; // "Paid" or "Unpaid"
+
+  if (isNaN(balance)) {
+    alert("Balance must be a valid number.");
+    return;
+  }
+
+  if (!softwareFee) {
+    alert("Please select Paid or Unpaid for Software Fee.");
+    return;
+  }
+
+  try {
+    // Generate a unique uid2 (push key for the trading account)
+    const uid2 = firebase.database().ref("users").push().key;
+
+    // Prepare the account data to store under /users/{uid2}
+    const accountData = {
+      name: accountName,          // Account name (e.g., "ForexSecretWorld")
+      accountNumber: username,    // Username (displayed as account number)
+      password: password,         // Account password (shown in table)
+      accountPassword: accountPassword, // Additional password field
+      email: email,
+      balance: balance,
+      appFee: softwareFee         // Software fee ("Paid" or "Unpaid")
+    };
+
+    // Step 1: Set /userInfo/{currentRequestUid}/uid2 = uid2 (nested under user login details)
+    await firebase.database().ref(`userInfo/${currentRequestUid}/uid2`).set(uid2);
+
+    // Step 2: Set /users/{uid2} = accountData (overwrites any existing data for this uid2)
+    await firebase.database().ref(`users/${uid2}`).set(accountData);
+
+    // Step 3: Remove the request from /usersRequestingFunds (cleanup)
+    await firebase.database().ref(`usersRequestingFunds/${currentRequestUid}`).remove();
+
+    alert("Request approved successfully! The user's trading account has been set up.");
+    closeModal(); // Close modal after success
+
+    // Refresh the trading accounts table
+    loadTradingAccounts();
+
+  } catch (err) {
+    console.error("Error approving request:", err);
+    alert("Failed to approve request. Please try again.");
+  }
+});
+
+// 🔹 Load and display trading accounts in the table (with all user info)
+function loadTradingAccounts() {
+  const tradingTbody = document.querySelector("#tradingAccounts tbody");
+  if (!tradingTbody) return; // If the table doesn't exist, skip
+
+  firebase.database().ref("users").on("value", snapshot => {
+    const users = snapshot.val();
+    tradingTbody.innerHTML = ""; // Clear previous rows
+
+    if (!users) {
+      tradingTbody.innerHTML = "<tr><td colspan='9'>No trading accounts.</td></tr>";
+      return;
+    }
+
+    let index = 1;
+    for (const uid2 in users) {
+      const user = users[uid2];
+      // Only show accounts with accountNumber (trading accounts, approved requests)
+      if (!user.accountNumber) continue;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${index}</td>
+        <td>${user.name || ""}</td>
+        <td>${user.accountNumber || ""}</td>
+        <td>$${Number(user.balance).toFixed(2)}</td>
+        <td>${user.appFee || ""}</td>
+        <td>${user.email || ""}</td>
+        <td>
+          <input type="password" value="${user.password || ""}" id="password-${uid2}" readonly>
+          <button onclick="togglePassword('password-${uid2}')" style="border:none; background:none; cursor:pointer;">
+            👁️
+          </button>
+        </td>
+        <td>
+          <input type="password" value="${user.accountPassword || ""}" id="accountPassword-${uid2}" readonly>
+          <button onclick="togglePassword('accountPassword-${uid2}')" style="border:none; background:none; cursor:pointer;">
+            👁️
+          </button>
+        </td>
+        <td>
+          <button onclick="openEditModal('${uid2}')">Edit</button>
+          <button onclick="deleteTradingAccount('${uid2}')">Delete</button>
+        </td>
+      `;
+      tradingTbody.appendChild(row);
+      index++;
+    }
+  });
+}
+
+// 🔹 Load and display user passwords in the table (simplified view)
+function loadUserPasswords() {
+  const passwordsTbody = document.querySelector("#userPasswordsTable tbody");
+  if (!passwordsTbody) return; // If the table doesn't exist, skip
+
+  firebase.database().ref("users").on("value", snapshot => {
+    const users = snapshot.val();
+    passwordsTbody.innerHTML = ""; // Clear previous rows
+
+    if (!users) {
+      passwordsTbody.innerHTML = "<tr><td colspan='4'>No users.</td></tr>";
+      return;
+    }
+
+    for (const uid2 in users) {
+      const user = users[uid2];
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${user.name || ""}</td>
+        <td>${user.email || ""}</td>
+        <td>
+          <input type="password" value="${user.password || ""}" id="userPassword-${uid2}" readonly>
+          <button onclick="togglePassword('userPassword-${uid2}')" style="border:none; background:none; cursor:pointer;">
+            👁️
+          </button>
+        </td>
+        <td>
+          <input type="password" value="${user.accountPassword || ""}" id="userAccountPassword-${uid2}" readonly>
+          <button onclick="togglePassword('userAccountPassword-${uid2}')" style="border:none; background:none; cursor:pointer;">
+            👁️
+          </button>
+        </td>
+      `;
+      passwordsTbody.appendChild(row);
+    }
+  });
+}
+
+// 🔹 Load and display phases in the table (with account summary)
+function loadPhases() {
+  const phasesTbody = document.querySelector("#phasesTable tbody");
+  if (!phasesTbody) return; // If the table doesn't exist, skip
+
+  firebase.database().ref("users").on("value", snapshot => {
+    const users = snapshot.val();
+    phasesTbody.innerHTML = ""; // Clear previous rows
+
+    if (!users) {
+      phasesTbody.innerHTML = "<tr><td colspan='11'>No trading accounts.</td></tr>";
+      return;
+    }
+
+    let index = 1;
+    for (const uid2 in users) {
+      const user = users[uid2];
+      // Only show accounts with accountNumber (trading accounts, approved requests)
+      if (!user.accountNumber) continue;
+
+      // Use stored values if available, otherwise calculate from balance
+      const balance = parseFloat(user.balance || 0);
+      const withdrawable = user.withdrawableProfit !== undefined ? parseFloat(user.withdrawableProfit) : Math.max(0, (balance - 500) / 2);
+      const company = user.companyProfit !== undefined ? parseFloat(user.companyProfit) : Math.max(0, (balance - 500) / 2);
+      const total = user.totalProfit !== undefined ? parseFloat(user.totalProfit) : Math.max(0, (balance - 500));
+      const days = user.days !== undefined ? parseInt(user.days) : calculateDays(user.startTime);
+
+      // Phase status based on balance
+      const phases = [
+        { name: "Phase 1", target: 750 },
+        { name: "Phase 2", target: 1000 },
+        { name: "Phase 3", target: 1500 },
+        { name: "Phase 4", target: 3000 },
+        { name: "Phase 5", target: 5000 },
+        { name: "Phase 6", target: 7000 },
+        { name: "Phase 7", target: 9000 },
+        { name: "Phase 8", target: 10000 }
+      ];
+      const phaseStatus = phases.map(p => balance >= p.target ? `${p.name}: ✅ Passed` : `${p.name}: 🔒 Locked`).join(", ");
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${index}</td>
+        <td>${user.name || ""}</td>
+        <td>${user.email || ""}</td>
+        <td>$${balance.toFixed(2)}</td>
+        <td>$${withdrawable.toFixed(2)}</td>
+        <td>$${company.toFixed(2)}</td>
+        <td>$${total.toFixed(2)}</td>
+        <td>${days}</td>
+        <td>${user.appFee || "Unpaid"}</td>
+                <td>${phaseStatus}</td>
+        <td>
+          <button onclick="openEditPhasesModal('${uid2}')">Edit</button>
+        </td>
+      `;
+      phasesTbody.appendChild(row);
+      index++;
+    }
+  });
+}
+
+// 🔹 Calculate days from startTime
+function calculateDays(startTime) {
+  if (!startTime || startTime === "0") return 0;
+  const start = new Date(startTime);
+  const now = new Date();
+  const diff = now - start;
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+// 🔹 Delete trading account (only deletes the trading account, not the main user account)
+function deleteTradingAccount(uid2) {
+  if (confirm("Are you sure you want to delete this trading account? This action cannot be undone.")) {
+    // Only remove the account from /users/{uid2} (trading account data)
+    // Do NOT remove the uid2 from /userInfo/{originalUid}/uid2 to keep the main account unaffected
+    firebase.database().ref(`users/${uid2}`).remove()
+      .then(() => {
+        alert("Trading account deleted successfully. The main user account remains unaffected.");
+        loadTradingAccounts(); // Refresh table
+        loadUserPasswords(); // Refresh passwords table if open
+        loadPhases(); // Refresh phases table
+      })
+      .catch(err => {
+        console.error("Error deleting account:", err);
+        alert("Failed to delete account.");
+      });
+  }
+}
+
+// 🔹 Open edit modal for trading account
+function openEditModal(uid2) {
+  currentUid2 = uid2;
+  document.getElementById("editModal").style.display = "block";
+
+  // Fetch current data and pre-fill
+  firebase.database().ref(`users/${uid2}`).once("value")
+    .then(snapshot => {
+      const user = snapshot.val();
+      if (user) {
+        document.getElementById("editAccountName").value = user.name || "";
+        document.getElementById("editAccountPassword").value = user.accountPassword || "";
+        document.getElementById("editBalance").value = user.balance || "";
+        document.getElementById("editSoftwareFee").value = user.appFee || "";
+      }
+    })
+    .catch(err => {
+      console.error("Error fetching account data:", err);
+    });
+}
+
+// 🔹 Handle edit form submission
+document.getElementById("editForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  if (!currentUid2) {
+    alert("No account selected.");
+    return;
+  }
+
+  const accountName = document.getElementById("editAccountName").value.trim();
+  const accountPassword = document.getElementById("editAccountPassword").value;
+  const balance = parseFloat(document.getElementById("editBalance").value);
+  const softwareFee = document.getElementById("editSoftwareFee").value;
+
+  if (isNaN(balance)) {
+    alert("Balance must be a valid number.");
+    return;
+  }
+
+  try {
+    await firebase.database().ref(`users/${currentUid2}`).update({
+      name: accountName,
+      accountPassword: accountPassword,
+      balance: balance,
+      appFee: softwareFee
+    });
+    alert("Account updated successfully.");
+    closeModal();
+    loadTradingAccounts(); // Refresh table
+    loadPhases(); // Refresh phases table
+  } catch (err) {
+    console.error("Error updating account:", err);
+    alert("Failed to update account.");
+  }
+});
+
+// 🔹 Open edit modal for phases
+function openEditPhasesModal(uid2) {
+  currentUid2 = uid2;
+  document.getElementById("editPhasesModal").style.display = "block";
+
+  // Fetch current data and pre-fill
+  firebase.database().ref(`users/${uid2}`).once("value")
+    .then(snapshot => {
+      const user = snapshot.val();
+      if (user) {
+        document.getElementById("editPhasesBalance").value = user.balance || "";
+        document.getElementById("editPhasesWithdrawable").value = user.withdrawableProfit || "";
+        document.getElementById("editPhasesCompany").value = user.companyProfit || "";
+        document.getElementById("editPhasesTotal").value = user.totalProfit || "";
+        document.getElementById("editPhasesDays").value = user.days || "";
+        document.getElementById("editPhasesAppFee").value = user.appFee || "";
+      }
+    })
+    .catch(err => {
+      console.error("Error fetching phases data:", err);
+    });
+}
+
+// 🔹 Handle edit phases form submission
+document.getElementById("editPhasesForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  if (!currentUid2) {
+    alert("No account selected.");
+    return;
+  }
+
+  const balance = parseFloat(document.getElementById("editPhasesBalance").value);
+  const withdrawable = parseFloat(document.getElementById("editPhasesWithdrawable").value);
+  const company = parseFloat(document.getElementById("editPhasesCompany").value);
+  const total = parseFloat(document.getElementById("editPhasesTotal").value);
+  const days = parseInt(document.getElementById("editPhasesDays").value);
+  const appFee = document.getElementById("editPhasesAppFee").value;
+
+  if (isNaN(balance) || isNaN(withdrawable) || isNaN(company) || isNaN(total) || isNaN(days)) {
+    alert("All numeric fields must be valid numbers.");
+    return;
+  }
+
+  try {
+    await firebase.database().ref(`users/${currentUid2}`).update({
+      balance: balance,
+      withdrawableProfit: withdrawable,
+      companyProfit: company,
+      totalProfit: total,
+      days: days,
+      appFee: appFee
+    });
+    alert("Phases updated successfully.");
+    closeModal();
+    loadPhases(); // Refresh phases table
+    loadTradingAccounts(); // Refresh trading accounts table
+  } catch (err) {
+    console.error("Error updating phases:", err);
+    alert("Failed to update phases.");
+  }
+});
+
+// 🔹 Toggle password visibility
+window.togglePassword = function (id) {
+  const field = document.getElementById(id);
+  field.type = (field.type === "password") ? "text" : "password";
+};
+
+// 🔹 Initialize trading accounts table on load
+loadTradingAccounts();
+
+// 🔹 Initialize phases table on load
+loadPhases();
+
+///end
+function openTab(tabId) {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  
+  // Load data for specific tabs
+  if (tabId === 'tradingTab') {
+    loadTradingAccounts();
+  } else if (tabId === 'userPasswordsTab') {
+    loadUserPasswords();
+  } else if (tabId === 'phasesTab') {
+    loadPhases();
+  }
+}
+
+
+// Products CRUD (your existing code)
+function addOrUpdateProduct() { /* ...existing code here... */ }
+// Load products
+db.ref('products').on('value', snapshot => {
+  const tbody = document.querySelector('#productsTable tbody');
+  tbody.innerHTML = '';
+  snapshot.forEach(child => {
+    const data = child.val();
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><img src="${data.image}" class="product-image"></td>
+      <td>${data.name}</td>
+      <td>${data.category}</td>
+      <td>$${data.price}</td>
+      <td>
+        <button onclick="editProduct('${child.key}','${data.name}','${data.description}','${data.price}','${data.category}')">Edit</button>
+        <button onclick="deleteProduct('${child.key}','${data.image}')">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+});
+
+// Pending orders
+db.ref('orders').orderByChild('status').equalTo('pending').on('value', snapshot => {
+  const tbody = document.querySelector('#ordersTable tbody');
+  tbody.innerHTML = '';
+  snapshot.forEach(child => {
+    const data = child.val();
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${child.key}</td>
+      <td>${data.customerName}</td>
+      <td>${data.productName}</td>
+      <td>$${data.price}</td>
+      <td>${data.status}</td>
+      <td><button onclick="markOrderCompleted('${child.key}')">Mark Completed</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+});
+
+// Mark order completed
+function markOrderCompleted(orderId) {
+  db.ref('orders/' + orderId).update({ status: 'completed' })
+    .then(() => showToast('Order marked as completed'))
+    .catch(err => showToast(err.message));
+}
+
+
+// ========== WITHDRAWAL MANAGEMENT ==========
+
+// Load and display withdrawals
+function loadWithdrawals() {
+  const withdrawalsTbody = document.querySelector("#withdrawalsTable tbody");
+  const completedTbody = document.querySelector("#completedWithdrawalsTable tbody");
+  
+  if (!withdrawalsTbody || !completedTbody) return;
+  
+  withdrawalsTbody.innerHTML = "";
+  completedTbody.innerHTML = "";
+  
+  firebase.database().ref('withdrawals').on('value', snapshot => {
+    const withdrawals = snapshot.val();
+    
+    if (!withdrawals) {
+      withdrawalsTbody.innerHTML = "<tr><td colspan='7'>No pending withdrawals.</td></tr>";
+      completedTbody.innerHTML = "<tr><td colspan='7'>No completed withdrawals.</td></tr>";
+      return;
+    }
+    
+    let pendingIndex = 1;
+    let completedIndex = 1;
+    
+    for (const withdrawalId in withdrawals) {
+      const withdrawal = withdrawals[withdrawalId];
+      
+      // Fetch user info to get name/email
+      firebase.database().ref('users/' + withdrawal.uid).once('value')
+        .then(userSnapshot => {
+          const userData = userSnapshot.val();
+          const userName = userData ? (userData.fullName || userData.email || 'Unknown') : 'Unknown';
+          const userEmail = userData ? userData.email : 'Unknown';
+          
+          const date = new Date(withdrawal.timestamp);
+          const formattedDate = date.toLocaleString();
+          
+          const row = `
+            <tr>
+              <td>${withdrawal.status === 'pending' ? pendingIndex : completedIndex}</td>
+              <td>${userName}</td>
+              <td>${withdrawal.paypalEmail}</td>
+              <td>$${parseFloat(withdrawal.amount).toFixed(2)}</td>
+              <td>${formattedDate}</td>
+              <td class="status-${withdrawal.status}">${withdrawal.status.toUpperCase()}</td>
+              ${withdrawal.status === 'pending' ? `
+              <td>
+                <button onclick="approveWithdrawal('${withdrawalId}', '${withdrawal.uid}', '${withdrawal.amount}')">Approve</button>
+                <button onclick="rejectWithdrawal('${withdrawalId}')">Reject</button>
+                <button onclick="processWithdrawal('${withdrawalId}', '${withdrawal.uid}', '${withdrawal.paypalEmail}', '${withdrawal.amount}')">Mark as Processing</button>
+              </td>
+              ` : `
+              <td>${withdrawal.completedDate ? new Date(withdrawal.completedDate).toLocaleString() : 'N/A'}</td>
+              `}
+            </tr>
+          `;
+          
+          if (withdrawal.status === 'pending') {
+            withdrawalsTbody.innerHTML += row;
+            pendingIndex++;
+          } else {
+            completedTbody.innerHTML += row;
+            completedIndex++;
+          }
+        });
+    }
+  });
+}
+
+// Approve withdrawal
+function approveWithdrawal(withdrawalId, userId, amount) {
+  if (confirm(`Approve withdrawal of $${amount}? This will notify the user it will be processed within 2 hours.`)) {
+    // Update withdrawal status
+    firebase.database().ref(`withdrawals/${withdrawalId}`).update({
+      status: 'approved',
+      approvedAt: Date.now(),
+      approvedBy: 'Admin'
+    })
+    .then(() => {
+      // Send notification to user
+      sendUserNotification(userId, 
+        "Withdrawal Approved", 
+        `Your withdrawal of $${amount} has been approved and will be processed within 2 hours.`
+      );
+      
+      showToast('Withdrawal approved! User notified.');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Error approving withdrawal.');
+    });
+  }
+}
+
+// Mark as Processing (when payment is being sent)
+function processWithdrawal(withdrawalId, userId, paypalEmail, amount) {
+  if (confirm(`Mark withdrawal as processing? This indicates payment is being sent to ${paypalEmail}.`)) {
+    firebase.database().ref(`withdrawals/${withdrawalId}`).update({
+      status: 'processing',
+      processingAt: Date.now()
+    })
+    .then(() => {
+      sendUserNotification(userId,
+        "Withdrawal Processing",
+        `Your withdrawal of $${amount} is being processed. Funds will arrive in your PayPal account shortly.`
+      );
+      
+      showToast('Withdrawal marked as processing.');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Error updating withdrawal.');
+    });
+  }
+}
+
+// Reject withdrawal
+function rejectWithdrawal(withdrawalId) {
+  const reason = prompt("Enter reason for rejection:");
+  if (reason) {
+    firebase.database().ref(`withdrawals/${withdrawalId}`).update({
+      status: 'rejected',
+      rejectedAt: Date.now(),
+      rejectionReason: reason
+    })
+    .then(() => {
+      showToast('Withdrawal rejected.');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Error rejecting withdrawal.');
+    });
+  }
+}
+
+// Complete withdrawal (after payment is sent)
+function completeWithdrawal(withdrawalId, userId) {
+  if (confirm("Mark this withdrawal as completed?")) {
+    firebase.database().ref(`withdrawals/${withdrawalId}`).update({
+      status: 'completed',
+      completedDate: Date.now()
+    })
+    .then(() => {
+      sendUserNotification(userId,
+        "Withdrawal Completed",
+        "Your withdrawal has been completed successfully. Check your PayPal account."
+      );
+      
+      showToast('Withdrawal marked as completed.');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Error completing withdrawal.');
+    });
+  }
+}
+
+// Send notification to user
+function sendUserNotification(userId, title, message) {
+  const notificationId = firebase.database().ref('notifications').push().key;
+  
+  firebase.database().ref(`notifications/${userId}/${notificationId}`).set({
+    title: title,
+    message: message,
+    timestamp: Date.now(),
+    read: false
+  });
+}
+
+// ========== UPDATE TAB FUNCTION ==========
+// Add 'withdrawalsTab' to your openTab function
+
+// In your existing openTab function, add:
+function openTab(tabId) {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  
+  // Load data for specific tabs
+  if (tabId === 'tradingTab') {
+    loadTradingAccounts();
+  } else if (tabId === 'userPasswordsTab') {
+    loadUserPasswords();
+  } else if (tabId === 'phasesTab') {
+    loadPhases();
+  } else if (tabId === 'withdrawalsTab') { // ADD THIS
+    loadWithdrawals();
+  }
+}
+
+
+
+</script>
+
+</body>
+</html>

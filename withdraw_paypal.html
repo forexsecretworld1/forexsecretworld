@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forex Secret World - Withdraw</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="firebase.js"></script>
+  
+  <style>
+    /* Additional styles for withdrawal history */
+    .history-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 30px auto;
+      max-width: 900px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .history-table th {
+      background: #ff523b;
+      color: white;
+      padding: 12px;
+      text-align: left;
+    }
+    
+    .history-table td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .status-pending { background: #ffeb3b; color: #333; }
+    .status-approved { background: #4caf50; color: white; }
+    .status-processing { background: #2196f3; color: white; }
+    .status-completed { background: #009688; color: white; }
+    .status-rejected { background: #f44336; color: white; }
+    
+    .balance-info {
+      background: linear-gradient(to right, #ff523b, #ff6b6b);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px auto;
+      max-width: 900px;
+      text-align: center;
+    }
+    
+    .balance-amount {
+      font-size: 32px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="container">
+      <div class="navbar">
+        <div class="logo">
+          <img src="logo2.png" width="155px">
+        </div>
+        <nav>
+          <ul id="MenuItems">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="dashboard.html">Back</a></li>
+          </ul>
+        </nav>
+        <img src="menue.png" class="menue-icon" onclick="menutoggle()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Balance Display -->
+  <div class="balance-info">
+    <h3>Available Balance</h3>
+    <div class="balance-amount" id="balanceAmount">$0.00</div>
+    <p>Minimum withdrawal: $100.00</p>
+  </div>
+
+  <!-- Withdraw Form -->
+  <div class="signup-container">
+    <h2>PayPal Withdrawal</h2>
+    <form id="withdrawForm">
+      <input type="email" id="paypalEmail" placeholder="PayPal Email Address" required>
+      <input type="number" id="withdrawAmount" placeholder="Amount" required min="100" step="0.01">
+      <button type="submit">Withdraw</button>
+    </form>
+  </div>
+
+  <!-- Withdrawal History -->
+  <div class="history-container">
+    <h2>Withdrawal History</h2>
+    <table class="history-table" id="withdrawalHistory">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>PayPal Email</th>
+          <th>Status</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        <!-- Will be populated by JavaScript -->
+      </tbody>
+    </table>
+    <div id="noHistory" style="text-align: center; padding: 40px; color: #666; display: none;">
+      No withdrawal history yet.
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="footer-col-1">
+          <img src="logo2.png"> 
+        </div>
+        <div class="footer-col-2">
+          <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p> 
+        </div>
+      </div>
+    </div>
+    <hr>
+    <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
+  </div>
+
+  <!-- Notification Display -->
+  <div id="notificationArea" style="position: fixed; top: 20px; right: 20px; max-width: 300px; z-index: 1000;"></div>
+
+  <!-- Menu Toggle JS -->
+  <script>
+    var MenuItems = document.getElementById("MenuItems");
+    var menuBtn = document.querySelector(".menue-icon");
+
+    MenuItems.style.maxHeight = "0px";
+
+    function menutoggle() {
+      if (MenuItems.style.maxHeight === "0px") {
+        MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
+      } else {
+        MenuItems.style.maxHeight = "0px";
+      }
+    }
+
+    document.addEventListener("click", function(event) {
+      if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
+        MenuItems.style.maxHeight = "0px";
+      }
+    });
+  </script>
+
+  <!-- Withdrawal System JavaScript -->
+  <script>
+    // ========== GLOBAL VARIABLES ==========
+    let currentUser = null;
+    let userBalance = 0;
+    
+    // ========== HELPER FUNCTIONS ==========
+    function showNotification(message, isSuccess = true) {
+      const notificationArea = document.getElementById('notificationArea');
+      if (!notificationArea) return;
+      
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      notification.style.cssText = `
+        background: ${isSuccess ? '#4caf50' : '#f44336'};
+        color: white;
+        padding: 15px;
+        margin: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      `;
+      
+      notificationArea.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+    }
+    
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+    
+    function getStatusBadge(status) {
+      const badges = {
+        'pending': '<span class="status-badge status-pending">PENDING</span>',
+        'approved': '<span class="status-badge status-approved">APPROVED</span>',
+        'processing': '<span class="status-badge status-processing">PROCESSING</span>',
+        'completed': '<span class="status-badge status-completed">COMPLETED</span>',
+        'rejected': '<span class="status-badge status-rejected">REJECTED</span>'
+      };
+      return badges[status] || '<span class="status-badge">UNKNOWN</span>';
+    }
+    
+    // ========== LOAD USER BALANCE ==========
+    function loadUserBalance() {
+      if (!currentUser) return;
+      
+      firebase.database().ref('users/' + currentUser.uid).once('value')
+        .then(snapshot => {
+          const userData = snapshot.val();
+          if (userData) {
+            userBalance = parseFloat(userData.mainBalance || 0);
+            document.getElementById('balanceAmount').textContent = '$' + userBalance.toFixed(2);
+            
+            // Update max amount in input
+            const amountInput = document.getElementById('withdrawAmount');
+            amountInput.max = userBalance;
+            if (userBalance > 0) {
+              amountInput.placeholder = "Max: $" + userBalance.toFixed(2);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error loading balance:', error);
+        });
+    }
+    
+    // ========== LOAD WITHDRAWAL HISTORY ==========
+    function loadWithdrawalHistory() {
+      if (!currentUser) return;
+      
+      firebase.database().ref('withdrawals').orderByChild('uid').equalTo(currentUser.uid)
+        .on('value', snapshot => {
+          const withdrawals = snapshot.val();
+          const historyBody = document.getElementById('historyBody');
+          const noHistory = document.getElementById('noHistory');
+          
+          historyBody.innerHTML = '';
+          
+          if (!withdrawals) {
+            noHistory.style.display = 'block';
+            return;
+          }
+          
+          noHistory.style.display = 'none';
+          
+          // Convert to array and sort by timestamp (newest first)
+          const withdrawalsArray = [];
+          for (const id in withdrawals) {
+            withdrawalsArray.push({
+              id: id,
+              ...withdrawals[id]
+            });
+          }
+          
+          withdrawalsArray.sort((a, b) => b.timestamp - a.timestamp);
+          
+          // Populate table
+          withdrawalsArray.forEach(withdrawal => {
+            const row = document.createElement('tr');
+            
+            // Create note based on status
+            let note = '';
+            if (withdrawal.status === 'approved') {
+              note = 'Will be processed within 2 hours';
+            } else if (withdrawal.status === 'rejected') {
+              note = withdrawal.rejectionReason || 'Rejected by admin';
+            } else if (withdrawal.status === 'processing') {
+              note = 'Payment being sent';
+            } else if (withdrawal.status === 'completed') {
+              note = 'Payment completed';
+            } else if (withdrawal.status === 'pending') {
+              note = 'Waiting for admin approval';
+            }
+            
+            row.innerHTML = `
+              <td>${formatDate(withdrawal.timestamp)}</td>
+              <td>$${parseFloat(withdrawal.amount).toFixed(2)}</td>
+              <td>${withdrawal.paypalEmail}</td>
+              <td>${getStatusBadge(withdrawal.status)}</td>
+              <td>${note}</td>
+            `;
+            historyBody.appendChild(row);
+          });
+        });
+    }
+    
+    // ========== SETUP WITHDRAWAL FORM ==========
+    function setupWithdrawalForm() {
+      const form = document.getElementById('withdrawForm');
+      if (!form) return;
+      
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const paypalEmail = document.getElementById('paypalEmail').value.trim();
+        const amount = parseFloat(document.getElementById('withdrawAmount').value);
+        const MIN_WITHDRAWAL = 100;
+        
+        // Validation
+        if (!paypalEmail) {
+          showNotification('Please enter your PayPal email address', false);
+          return;
+        }
+        
+        if (isNaN(amount) || amount < MIN_WITHDRAWAL) {
+          showNotification(`Minimum withdrawal amount is $${MIN_WITHDRAWAL.toFixed(2)}`, false);
+          return;
+        }
+        
+        if (amount > userBalance) {
+          showNotification('Insufficient balance', false);
+          return;
+        }
+        
+        // Disable button while processing
+        const submitBtn = form.querySelector('button');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+        
+        // Update user balance
+        const newBalance = userBalance - amount;
+        
+        firebase.database().ref('users/' + currentUser.uid).update({
+          mainBalance: newBalance.toFixed(2)
+        })
+        .then(() => {
+          // Create withdrawal request
+          const withdrawalData = {
+            uid: currentUser.uid,
+            paypalEmail: paypalEmail,
+            amount: amount,
+            timestamp: Date.now(),
+            status: 'pending',
+            userEmail: currentUser.email || 'Unknown'
+          };
+          
+          return firebase.database().ref('withdrawals').push(withdrawalData);
+        })
+        .then(() => {
+          // Success
+          showNotification(`Withdrawal request of $${amount.toFixed(2)} submitted successfully!`, true);
+          
+          // Reset form
+          form.reset();
+          
+          // Update local balance
+          userBalance = newBalance;
+          document.getElementById('balanceAmount').textContent = '$' + userBalance.toFixed(2);
+          
+          // Update input placeholder
+          const amountInput = document.getElementById('withdrawAmount');
+          amountInput.max = userBalance;
+          if (userBalance > 0) {
+            amountInput.placeholder = "Max: $" + userBalance.toFixed(2);
+          }
+          
+          // Re-enable button
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        })
+        .catch(error => {
+          console.error('Error submitting withdrawal:', error);
+          showNotification('Error submitting withdrawal. Please try again.', false);
+          
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        });
+      });
+    }
+    
+    // ========== SETUP NOTIFICATIONS ==========
+    function setupNotifications() {
+      if (!currentUser) return;
+      
+      firebase.database().ref('notifications/' + currentUser.uid).on('child_added', snapshot => {
+        const notification = snapshot.val();
+        
+        if (!notification.read) {
+          showNotification(notification.message, true);
+          
+          // Mark as read
+          firebase.database().ref('notifications/' + currentUser.uid + '/' + snapshot.key).update({
+            read: true
+          });
+        }
+      });
+    }
+    
+    // ========== INITIALIZE ==========
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      currentUser = user;
+      
+      // Load all data
+      loadUserBalance();
+      loadWithdrawalHistory();
+      setupWithdrawalForm();
+      setupNotifications();
+      
+      // Real-time balance updates
+      firebase.database().ref('users/' + user.uid + '/mainBalance').on('value', snapshot => {
+        if (snapshot.exists()) {
+          userBalance = parseFloat(snapshot.val() || 0);
+          document.getElementById('balanceAmount').textContent = '$' + userBalance.toFixed(2);
+          
+          const amountInput = document.getElementById('withdrawAmount');
+          amountInput.max = userBalance;
+          if (userBalance > 0) {
+            amountInput.placeholder = "Max: $" + userBalance.toFixed(2);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

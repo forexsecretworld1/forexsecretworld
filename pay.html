@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forex Secret World - Sign Up</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+<script src="firebase.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+      .payment-section{
+          padding:15px;
+          margin: 20px;
+      }
+      
+  </style>
+ </head>
+<body>
+
+  <!-- Original Header -->
+  <div class="header">
+    <div class="container">
+      <div class="navbar">
+        <div class="logo">
+          <img src="logo2.png" width="155px">
+        </div>
+        <nav>
+          <ul id="MenuItems">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="dashboard.html">Back</a></li>
+          </ul>
+        </nav>
+        <img src="menue.png" class="menue-icon" onclick="menutoggle()">
+      </div>
+    </div>
+  </div>
+
+ 
+<!-- Pay Buttons -->
+<section class="payment-section">
+  <h2>Pay software fee</h2>
+  
+<div  id="paypal-button-container"></div>
+
+ 
+</section>
+
+  <!-- Original Footer -->
+  <div class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="footer-col-1">
+          <img src="logo2.png"> 
+        </div>
+        <div class="footer-col-2">
+          <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p> 
+        </div>
+      </div>
+    </div>
+    <hr>
+    <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
+  </div>
+
+  <!-- JS -->
+<script>
+  var MenuItems = document.getElementById("MenuItems");
+  var menuBtn = document.querySelector(".menue-icon");
+
+  // Initially collapse menu
+  MenuItems.style.maxHeight = "0px";
+
+  // Toggle menu on button click
+  function menutoggle() {
+    if (MenuItems.style.maxHeight === "0px") {
+      MenuItems.style.maxHeight = MenuItems.scrollHeight + "px"; // dynamic height
+    } else {
+      MenuItems.style.maxHeight = "0px";
+    }
+  }
+
+  // Close menu if user clicks outside
+  document.addEventListener("click", function(event) {
+    if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
+      MenuItems.style.maxHeight = "0px";
+    }
+  });
+</script>
+
+<!-- Load PayPal SDK with your client ID -->
+<script src="https://www.paypal.com/sdk/js?client-id=ATMbyWh7-xm6nqFl4Biy_WazK0Zacj7fnqTlVvHn5jx7mvOUcaBpqXxMHgcYM1D2nmk1Nva_SZXjtrpn&currency=USD"></script>
+
+<!-- Container for the PayPal button -->
+
+<script>
+  
+// 🔹 Create container for PayPal and status dynamically
+
+// 🔹 Wait for logged-in user
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) {
+    
+    return;
+  }
+
+  const uid = user.uid;
+
+  // 🔹 Listen to fee status in real-time
+  db.ref('users/' + uid + '/appFee').on('value', snapshot => {
+    const status = snapshot.val() || "Unpaid";
+    
+  });
+
+  // 🔹 Render PayPal button
+  paypal.Buttons({
+    style: { color: 'gold', shape: 'rect', label: 'paypal', height: 40 },
+
+    createOrder: function(data, actions) {
+      return actions.order.create({
+        purchase_units: [{
+          description: "FluxiTrade Software Access",
+          amount: { currency_code: "USD", value: "61.00" }
+        }]
+      });
+    },
+
+    onApprove: function(data, actions) {
+      return actions.order.capture().then(details => {
+        console.log(`Payment successful! Thank you, ${details.payer.name.given_name}.`);
+
+        // 🔹 Update software fee status
+        db.ref('users/' + uid).update({ appFee: "Paid" })
+          .then(() => console.log("Software fee status updated"))
+          .catch(err => console.error("Error updating software fee:", err));
+      });
+    },
+
+    onCancel: function() {
+      console.log("Payment cancelled.");
+    },
+
+    onError: function(err) {
+      console.error("PayPal error:", err);
+    }
+
+  }).render('#paypal-button-container');
+});
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

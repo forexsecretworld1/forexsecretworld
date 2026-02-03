@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy Product - FOREX SECRET WORLD</title>
+    <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="firebase.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+      .container,.paypal{
+          display: column;
+          align-items: center;
+          justify-content: center;
+      }
+      .paypal{
+         padding-left: 20px;
+      }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <div class="navbar">
+        <div class="logo"><img src="logo2.png" width="155px" alt="Logo"></div>
+        <nav>
+          <ul id="MenuItems">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="product.html">Tools categories</a></li>
+            <li><a href="help.html">Help</a></li>
+          </ul>
+        </nav>
+        <img src="menue.png" class="menue-icon" onclick="menutoggle()" alt="Menu">
+      </div>
+<center>
+    
+
+      <h2>Product Details</h2>
+      <div class="container" id="productContainer">
+        <!-- Single product will appear here -->
+      </div>
+    </div>
+  </div>
+</center>
+  <div id="toast"></div>
+
+<script src="https://www.paypal.com/sdk/js?client-id=ATMbyWh7-xm6nqFl4Biy_WazK0Zacj7fnqTlVvHn5jx7mvOUcaBpqXxMHgcYM1D2nmk1Nva_SZXjtrpn&currency=USD"></script>
+<script>
+  var MenuItems = document.getElementById("MenuItems");
+  var menuBtn = document.querySelector(".menue-icon");
+  MenuItems.style.maxHeight = "0px";
+  function menutoggle() {
+    if(MenuItems.style.maxHeight === "0px") {
+      MenuItems.style.maxHeight = "200px";
+    } else {
+      MenuItems.style.maxHeight = "0px";
+    }
+  }
+
+  const toast = document.getElementById('toast');
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(()=> toast.style.display='none', 3000);
+  }
+
+  // Get productId from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const productId = urlParams.get('productId');
+
+  if (!productId) {
+    document.getElementById('productContainer').innerHTML = "<p>Product not found.</p>";
+  } else {
+    // Fetch product by ID
+    db.ref('products/' + productId).once('value').then(snapshot => {
+      if (!snapshot.exists()) {
+        document.getElementById('productContainer').innerHTML = "<p>Product not found.</p>";
+        return;
+      }
+
+      const data = snapshot.val();
+      const container = document.getElementById('productContainer');
+      container.innerHTML = `
+        <div class="product-card">
+          <img src="${data.image}" alt="${data.name}">
+          <h3>${data.name}</h3>
+           <p>Price: $${data.price}</p>
+          <p><b>Item description</b><br>
+              ${data.description || ''}</p>
+         
+          <div class="paypal" id="paypal-button-${productId}"></div>
+        </div>
+      `;
+
+      // Render PayPal button for this product
+      paypal.Buttons({
+        createOrder: function(dataPay, actions) {
+          return actions.order.create({
+            purchase_units: [{
+              amount: { value: data.price }
+            }]
+          });
+        },
+        onApprove: function(dataPay, actions) {
+          return actions.order.capture().then(function(details) {
+            // Save purchase in Firebase
+            db.ref('purchases').push({
+              productId: productId,
+              productName: data.name,
+              price: data.price,
+              userEmail: prompt("Enter your email to receive the EA:"),
+              status: 'pending',
+              date: new Date().toISOString()
+            });
+            showToast("Purchase successful! Check your email in 2-5 business days.");
+          });
+        }
+      }).render(`#paypal-button-${productId}`);
+    });
+  }
+</script>
+
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="footer-col-1">
+        <img src="logo2.png">
+      </div>
+      <div class="footer-col-2">
+        <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p>
+      </div>
+    </div>
+    <hr>
+    <p class="copyright">Copyright 1988-2025 : Forex Secret World</p>
+  </div>
+</div>
+</body>
+</html>

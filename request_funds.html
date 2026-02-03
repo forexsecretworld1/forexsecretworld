@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forex Secret World - Request Funds</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="firebase.js"></script>
+  <style>
+      
+      .body{
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content:center;
+      }
+      .terms-checkbox{
+          width: min(40%);
+          display: flex;
+          
+      }
+  </style>
+</head>
+<body>
+
+  <!-- Original Header -->
+  <div class="header">
+    <div class="container">
+      <div class="navbar">
+        <div class="logo">
+          <img src="logo2.png" width="155px">
+        </div>
+        <nav>
+          <ul id="MenuItems">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="dashboard.html">Client dashboard</a></li>
+          </ul>
+        </nav>
+        <img src="menue.png" class="menue-icon" onclick="menutoggle()">
+      </div>
+    </div>
+  </div>
+<div class="body">
+    
+
+  <!-- Request funds Form -->
+  <div class="signup-container">
+    <h2>Request Trading Funds</h2>
+    <form id="fundRequestForm">
+      <input type="text" id="fullName" placeholder="Full Name" required>
+      <input type="email" id="email" placeholder="Email Address" required>
+      <input type="tel" id="phone" placeholder="Phone Number" required>
+      <select required>
+        <option value="">Select Country</option>
+        <option value="usa">USA</option>
+        <option value="uk">UK</option>
+        <option value="canada">Canada</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="address" placeholder="Address line 1" required>
+      <input type="suburb" placeholder="Suburb" required>
+      <input type="city" placeholder="City/Town" required>
+      <input type="code" placeholder="Postal code" required>
+      <input type="province" placeholder="District/Province" required>
+
+      <!-- Trading Knowledge Questions -->
+      <h3>Trading Knowledge Questions</h3>
+      <label>1. How long have you been trading?</label>
+      <select required>
+        <option value="">Select an option</option>
+        <option value="less1">Less than 1 year</option>
+        <option value="1to3">1 - 3 years</option>
+        <option value="3to5">3 - 5 years</option>
+        <option value="5plus">More than 5 years</option>
+      </select>
+      <label>2. What does "leverage" in trading mean?</label>
+      <select required>
+        <option value="">Select an answer</option>
+        <option value="amplifies">It amplifies your potential profit and loss</option>
+        <option value="fixed">It fixes your trading fee</option>
+        <option value="insurance">It protects your capital completely</option>
+      </select>
+      <label>3. What is a “stop-loss” order?</label>
+      <select required>
+        <option value="">Select an answer</option>
+        <option value="limit-loss">An order to limit potential losses</option>
+        <option value="profit-take">An order to take profit immediately</option>
+        <option value="market-open">An order to open a new position</option>
+      </select>
+      <label>4. Which of these is considered higher risk?</label>
+      <select required>
+        <option value="">Select an answer</option>
+        <option value="forex">Trading on high leverage forex pairs</option>
+        <option value="savings">Investing in a bank savings account</option>
+        <option value="bonds">Government bonds</option>
+      </select>
+
+      <!-- Terms & Conditions Checkbox -->
+      <div class="terms-checkbox">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">
+          I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a>
+        </label>
+      </div>
+
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+</div>
+  <!-- Original Footer -->
+  <div class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="footer-col-1">
+          <img src="logo2.png">
+        </div>
+        <div class="footer-col-2">
+          <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
+  </div>
+<!-- Message Box -->
+<div id="messageBox"></div>
+
+  <!-- JS -->
+  <script>
+    var MenuItems = document.getElementById("MenuItems");
+    var menuBtn = document.querySelector(".menue-icon");
+
+    // Initially collapse menu
+    MenuItems.style.maxHeight = "0px";
+
+    // Toggle menu on button click
+    function menutoggle() {
+      if (MenuItems.style.maxHeight === "0px") {
+        MenuItems.style.maxHeight = MenuItems.scrollHeight + "px"; // dynamic height
+      } else {
+        MenuItems.style.maxHeight = "0px";
+      }
+    }
+
+    // Close menu if user clicks outside
+    document.addEventListener("click", function(event) {
+      if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
+        MenuItems.style.maxHeight = "0px";
+      }
+    });
+  </script>
+
+<!-- ✅ Firebase v8 version -->
+<script>
+ // ✅ Firebase v8 version
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const form = document.getElementById("fundRequestForm");
+
+// ✅ Check if user already requested funds or has a trading account on page load
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) return; // user not logged in
+
+  const requestRef = firebase.database().ref("usersRequestingFunds/" + user.uid);
+  const userInfoRef = firebase.database().ref("userInfo/" + user.uid + "/uid2");
+
+  // Check for pending request
+  requestRef.once("value")
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        // User already requested funds → redirect to status
+        window.location.href = "status.html";
+        return;
+      }
+
+      // If no pending request, check for existing trading account
+      return userInfoRef.once("value");
+    })
+    .then(snapshot => {
+      if (snapshot && snapshot.exists()) {
+        // User has a trading account → redirect to status
+        window.location.href = "status.html";
+      }
+      // else: show form (default behavior)
+    })
+    .catch(err => {
+      console.error("Error checking user status:", err);
+    });
+});
+
+// 🔹 Submit handler
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) {
+      showMessage("You must be logged in to submit a request!");
+      return;
+    }
+
+    // Retrieve the user's password from the database under the user's UID
+    firebase.database().ref("users/" + user.uid + "/password").once("value")
+      .then(snapshot => {
+        const password = snapshot.val();
+        if (!password) {
+          showMessage("Password not found in database. Please contact support.");
+          return;
+        }
+
+        // Collect all form data
+        const formData = {
+          uid: user.uid,
+          password: password, // From database
+          fullName: document.getElementById("fullName").value,
+          email: document.getElementById("email").value,
+          phone: document.getElementById("phone").value,
+          country: document.querySelector("select").value, // Assuming first select is country
+          address: document.querySelector("input[type='address']").value,
+          suburb: document.querySelector("input[type='suburb']").value,
+          city: document.querySelector("input[type='city']").value,
+          postalCode: document.querySelector("input[type='code']").value,
+          province: document.querySelector("input[type='province']").value,
+          tradingExperience: document.querySelectorAll("select")[1].value, // 1st trading question
+          leverageKnowledge: document.querySelectorAll("select")[2].value, // 2nd
+          stopLossKnowledge: document.querySelectorAll("select")[3].value, // 3rd
+          riskKnowledge: document.querySelectorAll("select")[4].value, // 4th
+          termsAccepted: document.getElementById("terms").checked,
+          submittedAt: new Date().toISOString(),
+          status: "Pending"
+        };
+
+        const requestRef = firebase.database().ref("usersRequestingFunds/" + user.uid);
+
+        // Check again before submitting
+        requestRef.once("value")
+          .then(snapshot => {
+            if (snapshot.exists()) {
+              window.location.href = "status.html";
+              return;
+            }
+
+            // Save request
+            requestRef.set(formData)
+              .then(() => {
+                showMessage("Your request has been submitted successfully!", true);
+                form.reset();
+                window.location.href = "status.html";
+              })
+              .catch(err => {
+                console.error("Submission error:", err);
+                showMessage("Failed to submit request. Please try again.");
+              });
+          })
+          .catch(err => {
+            console.error("Error checking previous request:", err);
+          });
+      })
+      .catch(err => {
+        console.error("Error retrieving password:", err);
+        showMessage("Failed to retrieve password. Please try again.");
+      });
+  });
+});
+
+// 🔹 Show message function
+function showMessage(message, isSuccess = false) {
+  const messageBox = document.getElementById("messageBox");
+  messageBox.innerHTML = `<p style="color: ${isSuccess ? 'green' : 'red'};">${message}</p>`;
+  messageBox.style.display = "block";
+  setTimeout(() => messageBox.style.display = "none", 5000);
+}
+</script>
+</body>
+</html>

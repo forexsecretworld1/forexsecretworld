@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>TOOLS - FOREX SECRET WORLD</title>
+  <style>
+      
+      * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+    body { background:#fff; color:#555; }
+    .navbar { display:flex; align-items:center; justify-content:space-between; padding:5px 10px; background:radial-gradient(#fff,#ffd6d6); }
+    nav ul { list-style:none; display:inline-block; margin-right:20px; }
+    nav ul li { display:inline-block; margin-right:20px; }
+    a { text-decoration:none; color:#555; }
+    .menue-icon { display:none; width:34px; cursor:pointer; }
+    #MenuItems { max-height:none; }
+    @media only screen and (max-width:800px){
+      nav ul { position:absolute; top:70px; left:0; background:#333; width:100%; overflow:hidden; transition:max-height 0.3s ease; }
+      nav ul li { display:block; margin:3px 20px; }
+      nav ul li a { color:#fff; display:block; padding:10px 0; border-bottom:1px solid #555; }
+      .menue-icon { display:block; }
+      #MenuItems { max-height:0; }
+    }
+
+    .small-container { max-width:1200px; margin:20px auto; padding:0 15px; }
+    .small-container-heading h2 { margin-bottom:10px; color:#ff523b; }
+    .row { display:flex; flex-wrap:wrap; justify-content:space-around; }
+    .col-6 { flex-basis:45%; margin:15px; background:#fff; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.1); text-align:center; overflow:hidden; transition: transform 0.3s; }
+    .col-6:hover { transform: translateY(-5px); }
+    .col-6 img { width:100%; height:180px; object-fit:cover; }
+    .col-6 h4 { padding:10px 0; color:#ff523b; }
+    .col-6 .btn-1 { display:inline-block; margin-bottom:15px; padding:6px 20px; border-radius:20px; background:#ff523b; color:#fff; transition: background 0.3s; }
+    .col-6 .btn-1:hover { background:#563434; }
+    .footer { background:#000; color:#8a8a8a; font-size:14px; padding:30px 0 10px; margin-top:50px; }
+    .footer p { color:#8a8a8a; }
+    .footer-col-1 img { width:100px; }
+    .copyright { text-align:center; }      
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <div class="navbar">
+        <div class="logo">
+          <img src="logo2.png" width="155px">
+        </div>
+        <nav>
+          <ul id="MenuItems">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="help.html">Help</a></li>
+          </ul>
+        </nav>
+        <img src="menue.png" class="menue-icon" onclick="menutoggle()">
+      </div>
+
+      <div class="small-container">
+        <div class="small-container-heading">
+          <h2>TOOLS CATEGORIES</h2>
+          <hr>
+        </div>
+        <div class="row">
+          <div class="col-4">
+            <img src="catergory books.png" alt="Books">
+            <h4>FOREX BOOKS</h4>
+            <a href="books.html" class="btn-1">View Now &#8594;</a>
+            <hr>
+          </div>
+          <div class="col-4">
+            <img src="catergory indicators.png" alt="Indicators">
+            <h4>FOREX INDICATORS</h4>
+            <a href="indicators.html" class="btn-1">View Now &#8594;</a>
+            <hr>
+          </div>
+          <div class="col-4">
+            <img src="catergory robots.png" alt="Robots">
+            <h4>FOREX ROBOTS</h4>
+            <a href="robots.html" class="btn-1">View Now &#8594;</a>
+            <hr>
+          </div>
+          <div class="col-4">
+            <img src="spy_and_accelerator.png" alt="Combo">
+            <h4>COMBO (INDICATORS & ROBOTS)</h4>
+            <a href="combos.html" class="btn-1">View Now &#8594;</a>
+            <hr>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  var MenuItems = document.getElementById("MenuItems");
+  MenuItems.style.maxHeight = "0px";
+
+  function menutoggle() {
+    if (MenuItems.style.maxHeight === "0px") {
+      MenuItems.style.maxHeight = "200px";
+    } else {
+      MenuItems.style.maxHeight = "0px";
+    }
+  }
+</script>
+
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="footer-col-1">
+        <img src="logo2.png" alt="Logo">
+      </div>
+      <div class="footer-col-2">
+        <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <p class="copyright">Copyright 1988-2025 : Forex Secret World</p>
+</div>
+
+</body>
+</html>
