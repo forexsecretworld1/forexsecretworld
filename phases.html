@@ -13,84 +13,7 @@
   <script src="firebase.js"></script>
   
   <style>
-    .balance-summary {
-      background: white;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 800px;
-      border-radius: 10px;
-      
-    }
-    
-    .balance-summary h3 {
-      color: #ff523b;
-      margin-bottom: 15px;
-    }
-    
-    .balance-summary p {
-      margin: 8px 0;
-      font-size: 16px;
-    }
-    
-    .startEnd-buttons {
-      text-align: center;
-      margin: 20px 0;
-    }
-    
-    .startEnd-btn {
-      background: #ff523b;
-      color: white;
-      border: none;
-      padding: 12px 30px;
-      margin: 0 10px;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    
-    .startEnd-btn:hover {
-      background: #563434;
-    }
-    
-    .startEnd-btn:disabled {
-      background: #cccccc;
-      cursor: not-allowed;
-    }
-    
-    .table-wrapper {
-      margin: 30px auto;
-      max-width: 800px;
-    }
-    
-    .account-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    .account-table th {
-      background: #ff523b;
-      color: white;
-      padding: 15px;
-      text-align: left;
-    }
-    
-    .account-table td {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .account-table tr:last-child td {
-      border-bottom: none;
-    }
-    
-    .account-table tr:hover {
-      background: #f9f9f9;
-    }
+  
   </style>
 </head>
 <body>
@@ -122,6 +45,8 @@
     <p><strong>Total Profit:</strong> <span id="totalDisplay">$0.00</span></p>
     <p><strong>Days:</strong> <span id="daysDisplay">0</span></p>
   </div>
+<center>
+    
 
   <div class="startEnd-buttons">
     <button type="button" class="startEnd-btn start" id="startBtn">START</button>
@@ -153,7 +78,7 @@
       </table>
     </div>
   </div>
-
+</center>
   <!-- Footer -->
   <div class="footer">
     <div class="container">
@@ -443,18 +368,23 @@
           // Delete trading account
           return firebase.database().ref('users/' + uid2).remove();
         })
-        .then(() => {
-          // Clean up any request funds
-          return firebase.database().ref('usersRequestingFunds/' + currentUser.uid).remove();
-        })
-        .then(() => {
-          showMessage(`✅ Payout successful! $${withdrawable.toFixed(2)} added to your main balance.`, true);
-          
-          // Redirect to dashboard after delay
-          setTimeout(() => {
-            window.location.href = "dashboard.html";
-          }, 2000);
-        })
+       .then(() => {
+  // DELETE THE OLD REQUEST from usersRequestingFunds
+  // This allows user to request new funds
+  return firebase.database().ref('usersRequestingFunds/' + currentUser.uid).remove();
+})
+.then(() => {
+  // Also remove uid2 from userInfo so they can get new account
+  return firebase.database().ref('userInfo/' + currentUser.uid + '/uid2').remove();
+})
+.then(() => {
+  showMessage(`✅ Payout successful! $${withdrawable.toFixed(2)} added to your main balance. You can now request new funds.`, true);
+  
+  // Redirect to dashboard after delay
+  setTimeout(() => {
+    window.location.href = "dashboard.html";
+  }, 2000);
+})
         .catch(error => {
           console.error("Error ending phases:", error);
           showMessage("❌ Error ending phases: " + error.message, false);
