@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -350,7 +350,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
           ${userData.name} <br>
           
         </td>
-        <td>$${Number(userData.balance || 0).toFixed(2)}</td>
+        <td>$${Number(userData.balance +userData.withdrawableProfit || 0).toFixed(2)}</td>
         <td>
           <button id="viewBtn" class="btn-action view">View</button>
         </td>
