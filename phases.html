@@ -244,7 +244,7 @@
       console.log("Updating UI with data:", userData);
       
       // Extract data
-      const balance = parseFloat(userData.balance || 0);
+      const balance = parseFloat(userData.balance + userData.withdrawableProfit || 0);
       const withdrawable = parseFloat(userData.withdrawableProfit || 0);
       const company = parseFloat(userData.companyProfit || 0);
       const total = withdrawable + company;
