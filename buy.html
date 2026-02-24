@@ -4,23 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buy Product - FOREX SECRET WORLD</title>
-    <!-- Firebase -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
   <script src="firebase.js"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-      .container,.paypal{
-          display: column;
+      .container {
+          display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
       }
-      .paypal{
+      .paypal {
          padding-left: 20px;
+      }
+      #messageBox {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        display: none;
+        z-index: 9999;
       }
   </style>
 </head>
@@ -38,107 +49,138 @@
         </nav>
         <img src="menue.png" class="menue-icon" onclick="menutoggle()" alt="Menu">
       </div>
-<center>
-    
 
-      <h2>Product Details</h2>
+      <h2 style="text-align: center;">Product Details</h2>
       <div class="container" id="productContainer">
         <!-- Single product will appear here -->
+        <p>Loading product...</p>
       </div>
     </div>
   </div>
-</center>
-  <div id="toast"></div>
 
-<script src="https://www.paypal.com/sdk/js?client-id=ATMbyWh7-xm6nqFl4Biy_WazK0Zacj7fnqTlVvHn5jx7mvOUcaBpqXxMHgcYM1D2nmk1Nva_SZXjtrpn&currency=USD"></script>
-<script>
-  var MenuItems = document.getElementById("MenuItems");
-  var menuBtn = document.querySelector(".menue-icon");
-  MenuItems.style.maxHeight = "0px";
-  function menutoggle() {
-    if(MenuItems.style.maxHeight === "0px") {
-      MenuItems.style.maxHeight = "200px";
-    } else {
-      MenuItems.style.maxHeight = "0px";
-    }
-  }
+  <!-- Message Box for notifications -->
+  <div id="messageBox"></div>
 
-  const toast = document.getElementById('toast');
-  function showToast(msg) {
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    setTimeout(()=> toast.style.display='none', 3000);
-  }
-
-  // Get productId from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const productId = urlParams.get('productId');
-
-  if (!productId) {
-    document.getElementById('productContainer').innerHTML = "<p>Product not found.</p>";
-  } else {
-    // Fetch product by ID
-    db.ref('products/' + productId).once('value').then(snapshot => {
-      if (!snapshot.exists()) {
-        document.getElementById('productContainer').innerHTML = "<p>Product not found.</p>";
-        return;
+  <script src="https://www.paypal.com/sdk/js?client-id=ATMbyWh7-xm6nqFl4Biy_WazK0Zacj7fnqTlVvHn5jx7mvOUcaBpqXxMHgcYM1D2nmk1Nva_SZXjtrpn&currency=USD"></script>
+  
+  <script>
+    // Menu toggle
+    var MenuItems = document.getElementById("MenuItems");
+    var menuBtn = document.querySelector(".menue-icon");
+    MenuItems.style.maxHeight = "0px";
+    
+    function menutoggle() {
+      if(MenuItems.style.maxHeight === "0px") {
+        MenuItems.style.maxHeight = "200px";
+      } else {
+        MenuItems.style.maxHeight = "0px";
       }
+    }
 
-      const data = snapshot.val();
-      const container = document.getElementById('productContainer');
-      container.innerHTML = `
-        <div class="product-card">
-          <img src="${data.image}" alt="${data.name}">
-          <h3>${data.name}</h3>
-           <p>Price: $${data.price}</p>
-          <p><b>Item description</b><br>
-              ${data.description || ''}</p>
-         
-          <div class="paypal" id="paypal-button-${productId}"></div>
+    // Get productId from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('productId');
+
+    if (!productId) {
+      document.getElementById('productContainer').innerHTML = "<p style='color: red;'>Product not found. No product ID provided.</p>";
+    } else {
+      console.log('Loading product:', productId);
+      
+      // Fetch product by ID - using db from firebase.js
+      db.ref('products/' + productId).once('value')
+        .then(snapshot => {
+          if (!snapshot.exists()) {
+            document.getElementById('productContainer').innerHTML = "<p style='color: red;'>Product not found in database.</p>";
+            return;
+          }
+
+          const data = snapshot.val();
+          console.log('Product data:', data);
+          
+          const container = document.getElementById('productContainer');
+          
+          // Create product display
+          container.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: 20px auto;">
+              <img src="${data.image || 'https://via.placeholder.com/300'}" alt="${data.name}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 5px;">
+              <h3 style="color: #ff523b; margin: 15px 0;">${data.name}</h3>
+              <p style="font-size: 24px; font-weight: bold; color: #333;">$${data.price}</p>
+              <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #333;">Description:</h4>
+                <p style="margin: 0; color: #666;">${data.description || 'No description available.'}</p>
+              </div>
+              <div id="paypal-button-container" style="margin-top: 20px;"></div>
+            </div>
+          `;
+
+          // Render PayPal button
+          if (typeof paypal !== 'undefined') {
+            paypal.Buttons({
+              createOrder: function(dataPay, actions) {
+                return actions.order.create({
+                  purchase_units: [{
+                    amount: { 
+                      value: data.price.toString()
+                    }
+                  }]
+                });
+              },
+              onApprove: function(dataPay, actions) {
+                return actions.order.capture().then(function(details) {
+                  // Get user email from PayPal or prompt
+                  const userEmail = details.payer.email_address || prompt("Enter your email to receive the product:");
+                  
+                  if (userEmail) {
+                    // Save purchase in Firebase
+                    return db.ref('purchases').push({
+                      productId: productId,
+                      productName: data.name,
+                      price: data.price,
+                      userEmail: userEmail,
+                      paypalEmail: details.payer.email_address,
+                      paypalOrderId: dataPay.orderID,
+                      status: 'pending',
+                      timestamp: firebase.database.ServerValue.TIMESTAMP
+                    }).then(() => {
+                      showMessage("✅ Purchase successful! Check your email in 2-5 business days.", true);
+                    });
+                  } else {
+                    showMessage("Purchase recorded but no email provided.", false);
+                  }
+                });
+              },
+              onError: function(err) {
+                console.error('PayPal error:', err);
+                showMessage("❌ Payment failed. Please try again.", false);
+              }
+            }).render('#paypal-button-container');
+          } else {
+            console.error('PayPal SDK not loaded');
+            container.innerHTML += '<p style="color: red;">Payment system unavailable. Please try again later.</p>';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading product:', error);
+          document.getElementById('productContainer').innerHTML = `
+            <p style="color: red;">Error loading product: ${error.message}</p>
+          `;
+        });
+    }
+  </script>
+
+  <div class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="footer-col-1">
+          <img src="logo2.png">
         </div>
-      `;
-
-      // Render PayPal button for this product
-      paypal.Buttons({
-        createOrder: function(dataPay, actions) {
-          return actions.order.create({
-            purchase_units: [{
-              amount: { value: data.price }
-            }]
-          });
-        },
-        onApprove: function(dataPay, actions) {
-          return actions.order.capture().then(function(details) {
-            // Save purchase in Firebase
-            db.ref('purchases').push({
-              productId: productId,
-              productName: data.name,
-              price: data.price,
-              userEmail: prompt("Enter your email to receive the EA:"),
-              status: 'pending',
-              date: new Date().toISOString()
-            });
-            showToast("Purchase successful! Check your email in 2-5 business days.");
-          });
-        }
-      }).render(`#paypal-button-${productId}`);
-    });
-  }
-</script>
-
-<div class="footer">
-  <div class="container">
-    <div class="row">
-      <div class="footer-col-1">
-        <img src="logo2.png">
-      </div>
-      <div class="footer-col-2">
-        <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p>
+        <div class="footer-col-2">
+          <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p>
+        </div>
       </div>
     </div>
     <hr>
     <p class="copyright">Copyright 1988-2025 : Forex Secret World</p>
   </div>
-</div>
 </body>
 </html>
