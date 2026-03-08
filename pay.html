@@ -83,10 +83,10 @@
 
   <!-- Pay Buttons -->
   <section class="payment-section">
-    <h2>Pay software fee</h2>
+    <h2>Pay software fee - $46.00</h2>
     <div class="payment-buttons">
-      <button type="button" class="payment-btn payWithMainBalance" onclick="window.location.href='mainBalancePay.html'">Pay with Main Balance</button>
-      <button type="button" class="payment-btn payWithPaypal">Debit/Credit Card or PayPal</button>
+      <button type="button" class="payment-btn payWithMainBalance" onclick="window.location.href='mainBalancePay.html'">Pay with Main Balance ($46.00)</button>
+      <button type="button" class="payment-btn payWithPaypal">Debit/Credit Card or PayPal ($46.00)</button>
     </div>
   </section>
 
@@ -143,8 +143,9 @@
         // Alert message
         alert("ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.");
 
-        // Redirect to payment page
-        window.location.href = "https://www.paypal.com/ncp/payment/8SRLDNT7NLACS";
+        // 🔴 IMPORTANT: You need to create a NEW PayPal payment link for $46.00
+        // Then replace the URL below
+        window.location.href = "https://www.paypal.com/ncp/payment/YOUR_NEW_46_DOLLAR_LINK_HERE";
       });
     });
   </script>
