@@ -23,8 +23,7 @@
       font-size: 24px;
     }
     
-    .transfer-container input,
-    .transfer-container textarea {
+    .transfer-container input {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
@@ -32,11 +31,6 @@
       border-radius: 5px;
       font-size: 14px;
       font-family: 'Poppins', sans-serif;
-    }
-    
-    .transfer-container textarea {
-      resize: vertical;
-      min-height: 80px;
     }
     
     .transfer-container button {
@@ -118,7 +112,6 @@
     <form id="transferForm">
       <input type="email" id="recipientEmail" placeholder="Recipient Email Address" required>
       <input type="number" id="transferAmount" placeholder="Amount in USD" required min="0.01" step="0.01">
-      <textarea id="transferNote" placeholder="Note (optional) - e.g., Payment for services"></textarea>
       <button type="submit" id="submitBtn">Transfer Funds</button>
     </form>
   </div>
@@ -177,13 +170,13 @@
     }
   </script>
 
-  <!-- Transfer Script -->
+  <!-- Transfer Script - FIXED to match dashboard structure -->
   <script>
     let currentUser = null;
 
-    // Helper function to find user by email in userInfo
+    // Helper function to find user by email in users node
     async function findUserByEmail(email) {
-      const snapshot = await db.ref('userInfo').once('value');
+      const snapshot = await db.ref('users').once('value');
       if (!snapshot.exists()) return null;
       
       const users = snapshot.val();
@@ -212,7 +205,6 @@
 
         const recipientEmail = document.getElementById('recipientEmail').value.trim();
         const amount = parseFloat(document.getElementById('transferAmount').value);
-        const note = document.getElementById('transferNote').value.trim();
 
         // Validate inputs
         if (!recipientEmail) {
@@ -235,8 +227,8 @@
         submitBtn.textContent = 'Processing...';
 
         try {
-          // Find sender's data
-          const senderSnap = await db.ref('userInfo/' + currentUser.uid).once('value');
+          // 🔥 FIXED: Get sender's data from 'users' node (matches dashboard)
+          const senderSnap = await db.ref('users/' + currentUser.uid).once('value');
           if (!senderSnap.exists()) {
             showMessage("❌ Your account data not found.", false);
             submitBtn.disabled = false;
@@ -263,7 +255,7 @@
             return;
           }
 
-          // Find recipient
+          // Find recipient in 'users' node
           const recipient = await findUserByEmail(recipientEmail);
           if (!recipient) {
             showMessage("❌ Recipient not found. Please check the email address.", false);
@@ -279,17 +271,17 @@
           const newSenderBalance = senderBalance - amount;
           const newRecipientBalance = recipientBalance + amount;
 
-          // Perform the transfer (update both balances)
+          // Perform the transfer (update both balances in 'users' node)
           await Promise.all([
-            db.ref('userInfo/' + currentUser.uid).update({
+            db.ref('users/' + currentUser.uid).update({
               mainBalance: newSenderBalance.toFixed(2)
             }),
-            db.ref('userInfo/' + recipient.uid).update({
+            db.ref('users/' + recipient.uid).update({
               mainBalance: newRecipientBalance.toFixed(2)
             })
           ]);
 
-          // Record the transfer in admin panel (optional - for history)
+          // Record the transfer in admin panel
           const transferRef = db.ref('transfers').push();
           await transferRef.set({
             fromUid: currentUser.uid,
@@ -297,7 +289,6 @@
             toUid: recipient.uid,
             toEmail: recipient.email,
             amount: amount,
-            note: note || '',
             timestamp: Date.now(),
             status: 'completed'
           });
@@ -320,4 +311,4 @@
     });
   </script>
 </body>
-</html>
+</html> 
