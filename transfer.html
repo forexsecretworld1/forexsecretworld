@@ -5,51 +5,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forex Secret World - Transfer Funds</title>
   <link rel="stylesheet" href="style.css">
-<script src="firebase.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    .balance-info {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-radius: 10px;
-      margin: 20px auto;
+    .transfer-container {
+      background: white;
+      padding: 40px;
+      margin: 40px auto;
       max-width: 500px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       text-align: center;
     }
-    .transfer-history {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      margin: 30px auto;
-      max-width: 800px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    
+    .transfer-container h2 {
+      color: #ff523b;
+      margin-bottom: 30px;
+      font-size: 24px;
     }
-    .history-table {
+    
+    .transfer-container input,
+    .transfer-container textarea {
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
     }
-    .history-table th {
+    
+    .transfer-container textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .transfer-container button {
       background: #ff523b;
       color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-top: 20px;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .transfer-container button:hover {
+      background: #563434;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 82, 59, 0.3);
+    }
+    
+    .transfer-container button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .info-text {
+      color: #666;
+      font-size: 14px;
+      margin: 15px 0;
       padding: 10px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      border-left: 4px solid #ff523b;
+      text-align: left;
     }
-    .history-table td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
+    
+    #messageBox {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 5px;
+      color: white;
+      display: none;
+      z-index: 9999;
     }
-    .status-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .status-completed { background: #4caf50; color: white; }
-    .status-pending { background: #ff9800; color: white; }
-    .status-failed { background: #f44336; color: white; }
-    .sent { color: #f44336; }
-    .received { color: #4caf50; }
   </style>
 </head>
 <body>
@@ -68,43 +106,27 @@
     </div>
   </div>
 
-  <!-- Balance Display -->
-  <div class="balance-info" id="balanceDisplay">
-    <h3>Your Balance</h3>
-    <div style="font-size: 32px; font-weight: bold;" id="currentBalance">$0.00</div>
-  </div>
-
-  <!-- Transfer Form -->
-  <div class="signup-container">
+  <!-- Transfer Form Container -->
+  <div class="transfer-container">
     <h2>Transfer to Another Trader</h2>
+    
+    <!-- Info Message -->
+    <div class="info-text">
+      ⚠️ Funds will be transferred instantly. Please double-check the recipient email before confirming.
+    </div>
+    
     <form id="transferForm">
-      <input type="email" id="recipientEmail" placeholder="Recipient Email" required>
-      <input type="number" id="transferAmount" placeholder="Amount" required min="0.01" step="0.01">
-      <textarea id="transferNote" placeholder="Note (optional)" rows="2"></textarea>
-      <button type="submit">Transfer</button>
+      <input type="email" id="recipientEmail" placeholder="Recipient Email Address" required>
+      <input type="number" id="transferAmount" placeholder="Amount in USD" required min="0.01" step="0.01">
+      <textarea id="transferNote" placeholder="Note (optional) - e.g., Payment for services"></textarea>
+      <button type="submit" id="submitBtn">Transfer Funds</button>
     </form>
   </div>
 
-  <!-- Transfer History -->
-  <div class="transfer-history">
-    <h3>Transfer History</h3>
-    <table class="history-table" id="transferHistory">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>With/To</th>
-          <th>Amount</th>
-          <th>Status</th>
-          <th>Note</th>
-        </tr>
-      </thead>
-      <tbody id="historyBody">
-        <tr><td colspan="6">Loading history...</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- Message Box -->
+  <div id="messageBox"></div>
 
+  <!-- Original Footer -->
   <div class="footer">
     <div class="container">
       <div class="row">
@@ -116,13 +138,19 @@
     <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
   </div>
 
-  <!-- Message Box -->
-  <div id="messageBox"></div>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="firebase.js"></script>
 
+  <!-- Menu Toggle JS -->
   <script>
     var MenuItems = document.getElementById("MenuItems");
     var menuBtn = document.querySelector(".menue-icon");
+
     MenuItems.style.maxHeight = "0px";
+
     function menutoggle() {
       if (MenuItems.style.maxHeight === "0px") {
         MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
@@ -130,92 +158,70 @@
         MenuItems.style.maxHeight = "0px";
       }
     }
+
     document.addEventListener("click", function(event) {
       if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
         MenuItems.style.maxHeight = "0px";
       }
     });
+
+    // Show message function
+    function showMessage(message, isSuccess = true) {
+      const box = document.getElementById("messageBox");
+      box.style.background = isSuccess ? "#4CAF50" : "#f44336";
+      box.textContent = message;
+      box.style.display = "block";
+      setTimeout(() => {
+        box.style.display = "none";
+      }, 4000);
+    }
   </script>
 
+  <!-- Transfer Script -->
   <script>
-    
+    let currentUser = null;
 
-    function formatDate(timestamp) {
-      const date = new Date(timestamp);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    }
-
-    function loadUserBalance(uid) {
-      get(ref(db, `userInfo/${uid}`)).then(snapshot => {
-        if (snapshot.exists()) {
-          const balance = parseFloat(snapshot.val().mainBalance || 0);
-          document.getElementById('currentBalance').textContent = '$' + balance.toFixed(2);
-        }
-      });
-    }
-
-    function loadTransferHistory(uid) {
-      const transfersRef = ref(db, 'transfers');
-      const sentQuery = query(transfersRef, orderByChild('fromUid'), equalTo(uid));
-      const receivedQuery = query(transfersRef, orderByChild('toUid'), equalTo(uid));
+    // Helper function to find user by email in userInfo
+    async function findUserByEmail(email) {
+      const snapshot = await db.ref('userInfo').once('value');
+      if (!snapshot.exists()) return null;
       
-      Promise.all([get(sentQuery), get(receivedQuery)]).then(([sentSnap, receivedSnap]) => {
-        const historyBody = document.getElementById('historyBody');
-        let allTransfers = [];
-        
-        if (sentSnap.exists()) {
-          Object.entries(sentSnap.val()).forEach(([id, data]) => {
-            allTransfers.push({ id, ...data, type: 'sent' });
-          });
+      const users = snapshot.val();
+      for (const uid in users) {
+        if (users[uid].email?.toLowerCase() === email.toLowerCase()) {
+          return { uid, ...users[uid] };
         }
-        if (receivedSnap.exists()) {
-          Object.entries(receivedSnap.val()).forEach(([id, data]) => {
-            allTransfers.push({ id, ...data, type: 'received' });
-          });
-        }
-        
-        allTransfers.sort((a, b) => b.timestamp - a.timestamp);
-        
-        if (allTransfers.length === 0) {
-          historyBody.innerHTML = '<tr><td colspan="6">No transfer history yet.</td></tr>';
-          return;
-        }
-        
-        historyBody.innerHTML = allTransfers.map(t => `
-          <tr>
-            <td>${formatDate(t.timestamp)}</td>
-            <td><span class="${t.type}">${t.type.toUpperCase()}</span></td>
-            <td>${t.type === 'sent' ? t.toEmail : t.fromEmail}</td>
-            <td style="color: ${t.type === 'sent' ? '#f44336' : '#4caf50'}; font-weight: bold;">
-              ${t.type === 'sent' ? '-' : '+'}$${parseFloat(t.amount).toFixed(2)}
-            </td>
-            <td><span class="status-badge status-${t.status}">${t.status.toUpperCase()}</span></td>
-            <td>${t.note || '-'}</td>
-          </tr>
-        `).join('');
-      });
+      }
+      return null;
     }
 
-    onAuthStateChanged(auth, (user) => {
+    // Listen for auth state
+    firebase.auth().onAuthStateChanged((user) => {
       if (!user) {
-        alert("❌ Please log in first.");
         window.location.href = "login.html";
         return;
       }
 
-      loadUserBalance(user.uid);
-      loadTransferHistory(user.uid);
+      currentUser = user;
 
       const form = document.getElementById("transferForm");
+      const submitBtn = document.getElementById("submitBtn");
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('recipientEmail').value.trim();
+        const recipientEmail = document.getElementById('recipientEmail').value.trim();
         const amount = parseFloat(document.getElementById('transferAmount').value);
         const note = document.getElementById('transferNote').value.trim();
 
-        if (!email || isNaN(amount) || amount <= 0) {
-          showMessage("❌ Please enter a valid email and amount.", false);
+        // Validate inputs
+        if (!recipientEmail) {
+          showMessage("❌ Please enter recipient email.", false);
+          return;
+        }
+
+        if (isNaN(amount) || amount <= 0) {
+          showMessage("❌ Please enter a valid amount.", false);
           return;
         }
 
@@ -224,106 +230,91 @@
           return;
         }
 
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
+        // Disable button during processing
         submitBtn.disabled = true;
         submitBtn.textContent = 'Processing...';
 
         try {
-          // Get all users
-          const snapshot = await get(ref(db, "userInfo"));
-          if (!snapshot.exists()) {
-            showMessage("❌ No users found in the database.", false);
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-            return;
-          }
-
-          const users = snapshot.val();
-          
-          // Find recipient
-          const targetUid = Object.keys(users).find(
-            uid => users[uid].email?.trim().toLowerCase() === email.toLowerCase()
-          );
-
-          if (!targetUid) {
-            showMessage("❌ User with this email not found.", false);
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-            return;
-          }
-
-          if (targetUid === user.uid) {
-            showMessage("❌ You cannot transfer to yourself.", false);
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-            return;
-          }
-
-          // Get sender's current balance
-          const senderSnap = await get(ref(db, `userInfo/${user.uid}`));
+          // Find sender's data
+          const senderSnap = await db.ref('userInfo/' + currentUser.uid).once('value');
           if (!senderSnap.exists()) {
-            showMessage("❌ Your user data not found.", false);
+            showMessage("❌ Your account data not found.", false);
             submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            submitBtn.textContent = 'Transfer Funds';
             return;
           }
 
-          let senderBalance = parseFloat(senderSnap.val().mainBalance || 0);
-          if (isNaN(senderBalance)) senderBalance = 0;
+          const senderData = senderSnap.val();
+          const senderBalance = parseFloat(senderData.mainBalance || 0);
 
-          if (senderBalance < amount) {
-            showMessage("❌ Insufficient funds.", false);
+          // Check if sending to self
+          if (senderData.email?.toLowerCase() === recipientEmail.toLowerCase()) {
+            showMessage("❌ You cannot transfer funds to yourself.", false);
             submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            submitBtn.textContent = 'Transfer Funds';
+            return;
+          }
+
+          // Check sufficient funds
+          if (senderBalance < amount) {
+            showMessage("❌ Insufficient funds. Your balance: $" + senderBalance.toFixed(2), false);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Transfer Funds';
+            return;
+          }
+
+          // Find recipient
+          const recipient = await findUserByEmail(recipientEmail);
+          if (!recipient) {
+            showMessage("❌ Recipient not found. Please check the email address.", false);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Transfer Funds';
             return;
           }
 
           // Get recipient's current balance
-          const recipientSnap = await get(ref(db, `userInfo/${targetUid}`));
-          let recipientBalance = parseFloat(recipientSnap.val().mainBalance || 0);
-          if (isNaN(recipientBalance)) recipientBalance = 0;
+          const recipientBalance = parseFloat(recipient.mainBalance || 0);
 
-          // Update balances
+          // Calculate new balances
           const newSenderBalance = senderBalance - amount;
           const newRecipientBalance = recipientBalance + amount;
 
-          await update(ref(db, `userInfo/${user.uid}`), { 
-            mainBalance: newSenderBalance.toFixed(2) 
-          });
-          
-          await update(ref(db, `userInfo/${targetUid}`), { 
-            mainBalance: newRecipientBalance.toFixed(2) 
-          });
+          // Perform the transfer (update both balances)
+          await Promise.all([
+            db.ref('userInfo/' + currentUser.uid).update({
+              mainBalance: newSenderBalance.toFixed(2)
+            }),
+            db.ref('userInfo/' + recipient.uid).update({
+              mainBalance: newRecipientBalance.toFixed(2)
+            })
+          ]);
 
-          // Record the transfer
-          const transferRef = push(ref(db, 'transfers'));
-          await update(transferRef, {
-            fromUid: user.uid,
-            fromEmail: senderSnap.val().email || user.email,
-            toUid: targetUid,
-            toEmail: email,
+          // Record the transfer in admin panel (optional - for history)
+          const transferRef = db.ref('transfers').push();
+          await transferRef.set({
+            fromUid: currentUser.uid,
+            fromEmail: senderData.email,
+            toUid: recipient.uid,
+            toEmail: recipient.email,
             amount: amount,
             note: note || '',
             timestamp: Date.now(),
             status: 'completed'
           });
 
-          showMessage(`✅ $${amount.toFixed(2)} transferred successfully to ${email}!`);
+          // Show success message
+          showMessage(`✅ $${amount.toFixed(2)} transferred successfully to ${recipientEmail}!`, true);
           
-          // Refresh balance and history
-          loadUserBalance(user.uid);
-          loadTransferHistory(user.uid);
-          
+          // Reset form
           form.reset();
           submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
+          submitBtn.textContent = 'Transfer Funds';
 
-        } catch (err) {
-          console.error('Transfer error:', err);
-          showMessage(`❌ Error transferring funds: ${err.message}`, false);
+        } catch (error) {
+          console.error("Transfer error:", error);
+          showMessage("❌ Error transferring funds: " + error.message, false);
           submitBtn.disabled = false;
-          submitBtn.textContent = originalText;
+          submitBtn.textContent = 'Transfer Funds';
         }
       });
     });
