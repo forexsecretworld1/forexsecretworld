@@ -1,38 +1,29 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forex Secret World - Pay Software Fee</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-  <script src="firebase.js"></script>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .payment-section {
-      background: white;
-      padding: 30px;
-      margin: 30px auto;
-      max-width: 500px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 15px;
+      margin: 20px;
       text-align: center;
     }
     
     .payment-section h2 {
       color: #ff523b;
       margin-bottom: 30px;
-      font-size: 24px;
     }
     
     .payment-buttons {
       display: flex;
       flex-direction: column;
       gap: 15px;
+      max-width: 300px;
+      margin: 0 auto;
     }
     
     .payment-btn {
@@ -50,7 +41,6 @@
     .payWithMainBalance {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      border: none;
     }
     
     .payWithMainBalance:hover {
@@ -62,55 +52,12 @@
       background: #ffc439;
       color: #111111;
       border: 1px solid #e0e0e0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
     }
     
     .payWithPaypal:hover {
       background: #f5b931;
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(255, 196, 57, 0.4);
-    }
-    
-    .payWithPaypal img {
-      width: 20px;
-      height: 20px;
-    }
-    
-    .status-badge {
-      display: inline-block;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 20px;
-    }
-    
-    .status-paid {
-      background: #4caf50;
-      color: white;
-    }
-    
-    .status-unpaid {
-      background: #f44336;
-      color: white;
-    }
-    
-    .info-message {
-      background: #e3f2fd;
-      color: #1976d2;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-      font-size: 14px;
-      border-left: 4px solid #1976d2;
-    }
-    
-    #paypal-button-container {
-      margin-top: 20px;
-      display: none;
     }
   </style>
 </head>
@@ -134,30 +81,12 @@
     </div>
   </div>
 
-  <!-- Pay Buttons Section -->
+  <!-- Pay Buttons -->
   <section class="payment-section">
-    <h2>Pay Software Fee</h2>
-    
-    <!-- Payment Status Display -->
-    <div id="paymentStatus"></div>
-    
-    <!-- Payment Buttons -->
-    <div class="payment-buttons" id="paymentButtons">
-      <button type="button" class="payment-btn payWithMainBalance" onclick="payWithMainBalance()">
-        Pay with Main Balance ($46.00)
-      </button>
-      <button type="button" class="payment-btn payWithPaypal" onclick="showPayPalButton()">
-        <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal">
-        Debit/Credit Card or PayPal
-      </button>
-    </div>
-    
-    <!-- PayPal Button Container (hidden by default) -->
-    <div id="paypal-button-container"></div>
-    
-    <!-- Info Message -->
-    <div class="info-message" id="infoMessage">
-      ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.
+    <h2>Pay software fee</h2>
+    <div class="payment-buttons">
+      <button type="button" class="payment-btn payWithMainBalance" onclick="window.location.href='mainBalancePay.html'">Pay with Main Balance</button>
+      <button type="button" class="payment-btn payWithPaypal">Debit/Credit Card or PayPal</button>
     </div>
   </section>
 
@@ -177,13 +106,15 @@
     <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
   </div>
 
-  <!-- Menu Toggle JS -->
+  <!-- JS -->
   <script>
     var MenuItems = document.getElementById("MenuItems");
     var menuBtn = document.querySelector(".menue-icon");
 
+    // Initially collapse menu
     MenuItems.style.maxHeight = "0px";
 
+    // Toggle menu on button click
     function menutoggle() {
       if (MenuItems.style.maxHeight === "0px") {
         MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
@@ -192,6 +123,7 @@
       }
     }
 
+    // Close menu if user clicks outside
     document.addEventListener("click", function(event) {
       if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
         MenuItems.style.maxHeight = "0px";
@@ -199,322 +131,23 @@
     });
   </script>
 
-  <!-- Load PayPal SDK -->
-  <script src="https://www.paypal.com/sdk/js?client-id=ATMbyWh7-xm6nqFl4Biy_WazK0Zacj7fnqTlVvHn5jx7mvOUcaBpqXxMHgcYM1D2nmk1Nva_SZXjtrpn&currency=USD"></script>
-
   <script>
-    // Global variables
-    let currentUser = null;
-    let paypalRendered = false;
+    // Wait until DOM is loaded
+    document.addEventListener("DOMContentLoaded", () => {
+      // Select the PayPal/Debit-Credit button
+      const paypalBtn = document.querySelector(".payWithPaypal");
 
-    // Show message function
-    function showMessage(message, isSuccess = true) {
-      const statusDiv = document.getElementById('paymentStatus');
-      statusDiv.innerHTML = `
-        <div class="status-badge ${isSuccess ? 'status-paid' : 'status-unpaid'}">
-          ${message}
-        </div>
-      `;
-      
-      if (!isSuccess) {
-        setTimeout(() => {
-          statusDiv.innerHTML = '';
-        }, 5000);
-      }
-    }
+      paypalBtn.addEventListener("click", (e) => {
+        e.preventDefault(); // Prevent immediate redirect
 
-    // Update payment status display
-    function updatePaymentStatus(status) {
-      const statusDiv = document.getElementById('paymentStatus');
-      const buttons = document.getElementById('paymentButtons');
-      const infoMsg = document.getElementById('infoMessage');
-      
-      if (status === "Paid") {
-        statusDiv.innerHTML = `
-          <div class="status-badge status-paid">
-            ✅ Software Fee Paid - Access Granted
-          </div>
-        `;
-        buttons.style.display = 'none';
-        infoMsg.style.display = 'none';
-        document.getElementById('paypal-button-container').style.display = 'none';
-      } else {
-        statusDiv.innerHTML = `
-          <div class="status-badge status-unpaid">
-            ⚠️ Software Fee: $46.00 (Unpaid)
-          </div>
-        `;
-        buttons.style.display = 'flex';
-        infoMsg.style.display = 'block';
-      }
-    }
+        // Alert message
+        alert("ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.");
 
-    // Pay with Main Balance
-    async function payWithMainBalance() {
-      if (!currentUser) {
-        alert("Please log in first.");
-        return;
-      }
-
-      const uid = currentUser.uid;
-      
-      try {
-        // Get user's main balance
-        const snapshot = await db.ref('users/' + uid).once('value');
-        const userData = snapshot.val();
-        const mainBalance = parseFloat(userData.mainBalance || 0);
-        
-        if (mainBalance >= 46) {
-          // Deduct from main balance
-          const newBalance = mainBalance - 46;
-          await db.ref('users/' + uid).update({ 
-            mainBalance: newBalance.toFixed(2),
-            appFee: "Paid" 
-          });
-          
-          showMessage("✅ Payment successful! Software fee paid from main balance.", true);
-          updatePaymentStatus("Paid");
-          
-          // Redirect to phases after 2 seconds
-          setTimeout(() => {
-            window.location.href = "phases.html";
-          }, 2000);
-        } else {
-          showMessage("❌ Insufficient main balance. Please use PayPal.", false);
-        }
-      } catch (error) {
-        console.error("Error processing payment:", error);
-        showMessage("❌ Error processing payment. Please try again.", false);
-      }
-    }
-
-    // Show PayPal button
-    function showPayPalButton() {
-      if (!currentUser) {
-        alert("Please log in first.");
-        return;
-      }
-
-      // Hide the regular buttons and show PayPal container
-      document.getElementById('paymentButtons').style.display = 'none';
-      document.getElementById('paypal-button-container').style.display = 'block';
-      
-      // Show info message
-      alert("ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.");
-      
-      // Render PayPal button if not already rendered
-      if (!paypalRendered && typeof paypal !== 'undefined') {
-        paypal.Buttons({
-          style: { 
-            color: 'gold', 
-            shape: 'rect', 
-            label: 'paypal', 
-            height: 40 
-          },
-
-          createOrder: function(data, actions) {
-            return actions.order.create({
-              purchase_units: [{
-                description: "FluxiTrade Software Access",
-                amount: { 
-                  currency_code: "USD", 
-                  value: "46.00" 
-                }
-              }]
-            });
-          },
-
-          onApprove: function(data, actions) {
-            return actions.order.capture().then(async function(details) {
-              console.log(`Payment successful! Thank you, ${details.payer.name.given_name}.`);
-              
-              // Update software fee status
-              await db.ref('users/' + currentUser.uid).update({ 
-                appFee: "Paid" 
-              });
-              
-              showMessage("✅ Payment successful! Redirecting to phases...", true);
-              updatePaymentStatus("Paid");
-              
-              // Redirect to phases after 2 seconds
-              setTimeout(() => {
-                window.location.href = "phases.html";
-              }, 2000);
-            });
-          },
-
-          onCancel: function() {
-            console.log("Payment cancelled.");
-            // Show buttons again
-            document.getElementById('paymentButtons').style.display = 'flex';
-            document.getElementById('paypal-button-container').style.display = 'none';
-          },
-
-          onError: function(err) {
-            console.error("PayPal error:", err);
-            showMessage("❌ Payment failed. Please try again.", false);
-            // Show buttons again
-            document.getElementById('paymentButtons').style.display = 'flex';
-            document.getElementById('paypal-button-container').style.display = 'none';
-          }
-
-        }).render('#paypal-button-container');
-        
-        paypalRendered = true;
-      }
-    }
-
-    // Listen for auth state
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      currentUser = user;
-      const uid = user.uid;
-
-      // Listen to fee status in real-time
-      db.ref('users/' + uid + '/appFee').on('value', snapshot => {
-        const status = snapshot.val() || "Unpaid";
-        updatePaymentStatus(status);
-      });
-
-      // Also listen to main balance for display
-      db.ref('users/' + uid + '/mainBalance').on('value', snapshot => {
-        const balance = parseFloat(snapshot.val() || 0);
-        // You could display this somewhere if needed
+        // Redirect to payment page
+        window.location.href = "https://www.paypal.com/ncp/payment/8SRLDNT7NLACS";
       });
     });
   </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
