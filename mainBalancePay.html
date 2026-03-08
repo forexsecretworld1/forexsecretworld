@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forex Secret World - Pay with main balance</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="firebase.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .payment-section {
+      background: white;
+      padding: 40px;
+      margin: 40px auto;
+      max-width: 500px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    
+    .payment-section h2 {
+      color: #ff523b;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    
+    .payment-section p {
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #333;
+    }
+    
+    .balance-display {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff523b;
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 5px;
+    }
+    
+    .payment-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    
+    .payment-btn {
+      padding: 15px 40px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .payWithPaypal {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .payWithPaypal:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .payWithMainBalance {
+      background: #f44336;
+      color: white;
+    }
+    
+    .payWithMainBalance:hover {
+      background: #da190b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 10px 0;
+    }
+    
+    .status-paid {
+      background: #4caf50;
+      color: white;
+    }
+    
+    .status-unpaid {
+      background: #f44336;
+      color: white;
+    }
+    
+    #messageBox {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 5px;
+      color: white;
+      display: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Original Header -->
+  <div class="header">
+    <div class="container">
+      <div class="navbar">
+        <div class="logo">
+          <img src="logo2.png" width="155px">
+        </div>
+        <nav>
+          <ul id="MenuItems">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="pay.html">Back</a></li>
+          </ul>
+        </nav>
+        <img src="menue.png" class="menue-icon" onclick="menutoggle()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Pay Section -->
+  <section class="payment-section">
+    <h2>Confirm Payment</h2>
+    <p><strong>You are about to pay $46.00 software fee, this amount will be deducted from your main balance.</strong></p>
+    
+    <!-- Balance Display -->
+    <div class="balance-display" id="balanceDisplay">
+      Your Balance: <span id="currentBalance">$0.00</span>
+    </div>
+    
+    <!-- Payment Status -->
+    <div id="paymentStatus"></div>
+    
+    <div class="payment-buttons">
+      <button type="button" class="payment-btn payWithPaypal" id="confirmBtn">Confirm Payment</button>
+      <button type="button" class="payment-btn payWithMainBalance" onclick="window.location.href='pay.html'">Cancel</button>
+    </div>
+  </section>
+
+  <!-- Message Box -->
+  <div id="messageBox"></div>
+
+  <!-- Original Footer -->
+  <div class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="footer-col-1">
+          <img src="logo2.png"> 
+        </div>
+        <div class="footer-col-2">
+          <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p> 
+        </div>
+      </div>
+    </div>
+    <hr>
+    <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
+  </div>
+
+  <!-- Menu Toggle JS -->
+  <script>
+    var MenuItems = document.getElementById("MenuItems");
+    var menuBtn = document.querySelector(".menue-icon");
+
+    MenuItems.style.maxHeight = "0px";
+
+    function menutoggle() {
+      if (MenuItems.style.maxHeight === "0px") {
+        MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
+      } else {
+        MenuItems.style.maxHeight = "0px";
+      }
+    }
+
+    document.addEventListener("click", function(event) {
+      if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
+        MenuItems.style.maxHeight = "0px";
+      }
+    });
+
+    // Show message function
+    function showMessage(message, isSuccess = true) {
+      const box = document.getElementById("messageBox");
+      box.style.background = isSuccess ? "#4CAF50" : "#f44336";
+      box.textContent = message;
+      box.style.display = "block";
+      setTimeout(() => {
+        box.style.display = "none";
+      }, 4000);
+    }
+
+    // Update payment status display
+    function updatePaymentStatus(status) {
+      const statusDiv = document.getElementById('paymentStatus');
+      if (status === "Paid") {
+        statusDiv.innerHTML = `
+          <div class="status-badge status-paid">
+            ✅ Software Fee Paid - Access Granted
+          </div>
+        `;
+        document.getElementById('confirmBtn').disabled = true;
+      } else {
+        statusDiv.innerHTML = `
+          <div class="status-badge status-unpaid">
+            ⚠️ Software Fee: $46.00 (Unpaid)
+          </div>
+        `;
+      }
+    }
+  </script>
+
+  <!-- Payment Script -->
+  <script>
+    // Global variables
+    let currentUser = null;
+    let userUid2 = null;
+
+    // Helper function to find user's trading account
+    async function findUserTradingAccount(uid) {
+      try {
+        // First check userInfo for uid2
+        const userInfoSnap = await db.ref('userInfo/' + uid).once('value');
+        if (userInfoSnap.exists()) {
+          const userInfo = userInfoSnap.val();
+          if (userInfo.uid2) {
+            return { path: `users/${userInfo.uid2}`, uid2: userInfo.uid2 };
+          }
+        }
+        
+        // If no uid2, check if user has direct trading account
+        const usersSnap = await db.ref('users').once('value');
+        if (usersSnap.exists()) {
+          const users = usersSnap.val();
+          for (const key in users) {
+            if (users[key].email === currentUser?.email) {
+              return { path: `users/${key}`, uid2: key };
+            }
+          }
+        }
+        
+        return null;
+      } catch (error) {
+        console.error("Error finding trading account:", error);
+        return null;
+      }
+    }
+
+    // Listen for auth state
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+      const uid = user.uid;
+
+      // Get user's main balance from userInfo
+      const userInfoSnap = await db.ref('userInfo/' + uid).once('value');
+      if (userInfoSnap.exists()) {
+        const userInfo = userInfoSnap.val();
+        const mainBalance = parseFloat(userInfo.mainBalance || 0);
+        document.getElementById('currentBalance').textContent = '$' + mainBalance.toFixed(2);
+        
+        // Store uid2 if exists
+        if (userInfo.uid2) {
+          userUid2 = userInfo.uid2;
+        }
+      }
+
+      // Check appFee status from trading account
+      const tradingAccount = await findUserTradingAccount(uid);
+      if (tradingAccount) {
+        const tradingSnap = await db.ref(tradingAccount.path).once('value');
+        if (tradingSnap.exists()) {
+          const status = tradingSnap.val().appFee || "Unpaid";
+          updatePaymentStatus(status);
+          userUid2 = tradingAccount.uid2;
+        }
+      }
+
+      // Confirm button click handler
+      const confirmBtn = document.getElementById("confirmBtn");
+      confirmBtn.addEventListener("click", async () => {
+        try {
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = "Processing...";
+
+          // Get fresh user data
+          const userInfoSnap = await db.ref('userInfo/' + uid).once('value');
+          if (!userInfoSnap.exists()) {
+            showMessage("❌ User data not found.", false);
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = "Confirm Payment";
+            return;
+          }
+
+          const userInfo = userInfoSnap.val();
+          const mainBalance = parseFloat(userInfo.mainBalance || 0);
+
+          if (mainBalance < 46) {
+            showMessage("❌ Insufficient funds. Need $46.00", false);
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = "Confirm Payment";
+            return;
+          }
+
+          // Find trading account to update appFee
+          let tradingPath = null;
+          let tradingUid2 = userUid2;
+
+          if (!tradingUid2) {
+            const tradingAccount = await findUserTradingAccount(uid);
+            if (tradingAccount) {
+              tradingPath = tradingAccount.path;
+              tradingUid2 = tradingAccount.uid2;
+            }
+          } else {
+            tradingPath = `users/${userUid2}`;
+          }
+
+          // Deduct $46 from main balance
+          const newBalance = mainBalance - 46;
+          await db.ref('userInfo/' + uid).update({
+            mainBalance: newBalance.toFixed(2)
+          });
+
+          // Update appFee in trading account
+          if (tradingPath) {
+            await db.ref(tradingPath).update({
+              appFee: "Paid"
+            });
+          } else {
+            // If no trading account found, try to update in users directly
+            const usersSnap = await db.ref('users').once('value');
+            if (usersSnap.exists()) {
+              const users = usersSnap.val();
+              for (const key in users) {
+                if (users[key].email === user.email) {
+                  await db.ref(`users/${key}`).update({
+                    appFee: "Paid"
+                  });
+                  break;
+                }
+              }
+            }
+          }
+
+          // Update display
+          document.getElementById('currentBalance').textContent = '$' + newBalance.toFixed(2);
+          showMessage("✅ $46.00 software fee paid successfully!", true);
+          updatePaymentStatus("Paid");
+
+          // Redirect to phases after success
+          setTimeout(() => {
+            window.location.href = "phases.html";
+          }, 2000);
+
+        } catch (error) {
+          console.error("Payment error:", error);
+          showMessage("❌ Error processing payment: " + error.message, false);
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = "Confirm Payment";
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
