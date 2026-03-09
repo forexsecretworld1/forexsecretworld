@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forex Secret World - Pay Software Fee</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="firebase.js"></script>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -81,14 +86,17 @@
     </div>
   </div>
 
-  <!-- Pay Buttons -->
+  <!-- Pay Buttons Section -->
   <section class="payment-section">
-    <h2>Pay software fee - $46.00</h2>
+    <h2>Pay software fee</h2>
     <div class="payment-buttons">
-      <button type="button" class="payment-btn payWithMainBalance" onclick="window.location.href='mainBalancePay.html'">Pay with Main Balance ($46.00)</button>
-      <button type="button" class="payment-btn payWithPaypal">Debit/Credit Card or PayPal ($46.00)</button>
+      <button type="button" class="payment-btn payWithMainBalance" onclick="payWithMainBalance()">Pay with Main Balance</button>
+      <button type="button" class="payment-btn payWithPaypal" onclick="payWithPaypal()">Debit/Credit Card or PayPal</button>
     </div>
   </section>
+
+  <!-- Message Box -->
+  <div id="messageBox" style="position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 5px; color: white; display: none; z-index: 9999;"></div>
 
   <!-- Original Footer -->
   <div class="footer">
@@ -106,15 +114,13 @@
     <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
   </div>
 
-  <!-- JS -->
+  <!-- Menu Toggle JS -->
   <script>
     var MenuItems = document.getElementById("MenuItems");
     var menuBtn = document.querySelector(".menue-icon");
 
-    // Initially collapse menu
     MenuItems.style.maxHeight = "0px";
 
-    // Toggle menu on button click
     function menutoggle() {
       if (MenuItems.style.maxHeight === "0px") {
         MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
@@ -123,30 +129,82 @@
       }
     }
 
-    // Close menu if user clicks outside
     document.addEventListener("click", function(event) {
       if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
         MenuItems.style.maxHeight = "0px";
       }
     });
+
+    function showMessage(message, isSuccess = true) {
+      const box = document.getElementById("messageBox");
+      box.style.background = isSuccess ? "#4CAF50" : "#f44336";
+      box.textContent = message;
+      box.style.display = "block";
+      setTimeout(() => {
+        box.style.display = "none";
+      }, 4000);
+    }
   </script>
 
   <script>
-    // Wait until DOM is loaded
-    document.addEventListener("DOMContentLoaded", () => {
-      // Select the PayPal/Debit-Credit button
-      const paypalBtn = document.querySelector(".payWithPaypal");
+    let currentUser = null;
 
-      paypalBtn.addEventListener("click", (e) => {
-        e.preventDefault(); // Prevent immediate redirect
+    // Pay with Main Balance
+    async function payWithMainBalance() {
+      if (!currentUser) {
+        showMessage("❌ Please log in first.", false);
+        return;
+      }
 
-        // Alert message
-        alert("ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.");
+      const uid = currentUser.uid;
+      
+      try {
+        // Get user's main balance
+        const snapshot = await db.ref('users/' + uid).once('value');
+        const userData = snapshot.val();
+        const mainBalance = parseFloat(userData.mainBalance || 0);
+        
+        if (mainBalance >= 46) {
+          // Deduct from main balance
+          const newBalance = mainBalance - 46;
+          await db.ref('users/' + uid).update({ 
+            mainBalance: newBalance.toFixed(2),
+            appFee: "Paid" 
+          });
+          
+          showMessage("✅ Payment successful! Redirecting to phases...", true);
+          
+          // Redirect to phases after 2 seconds
+          setTimeout(() => {
+            window.location.href = "phases.html";
+          }, 2000);
+        } else {
+          showMessage("❌ Insufficient main balance.", false);
+        }
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        showMessage("❌ Error processing payment. Please try again.", false);
+      }
+    }
 
-        // 🔴 IMPORTANT: You need to create a NEW PayPal payment link for $46.00
-        // Then replace the URL below
-        window.location.href = "https://www.paypal.com/ncp/payment/YOUR_NEW_46_DOLLAR_LINK_HERE";
-      });
+    // Pay with PayPal
+    function payWithPaypal() {
+      if (!currentUser) {
+        showMessage("❌ Please log in first.", false);
+        return;
+      }
+
+      alert("ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.");
+      window.location.href = "https://www.paypal.com/ncp/payment/8SRLDNT7NLACS";
+    }
+
+    // Listen for auth state
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = user;
     });
   </script>
 
