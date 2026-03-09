@@ -4,13 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forex Secret World - Pay Software Fee</title>
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
   <script src="firebase.js"></script>
-  <link rel="stylesheet" href="style.css">
+  
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <style>
     .payment-section {
       padding: 15px;
@@ -67,7 +69,9 @@
     
     #paypal-button-container {
       margin-top: 20px;
-      display: none;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
 </head>
@@ -91,16 +95,18 @@
     </div>
   </div>
 
-  <!-- Pay Buttons Section -->
+  <!-- Pay Section -->
   <section class="payment-section">
-    <h2>Pay software fee - $46.00</h2>
+    <h2>Pay Software Fee - $46.00</h2>
+    
+    <!-- Payment Buttons -->
     <div class="payment-buttons" id="mainButtons">
       <button type="button" class="payment-btn payWithMainBalance" onclick="payWithMainBalance()">Pay with Main Balance</button>
       <button type="button" class="payment-btn payWithPaypal" onclick="showPayPalButton()">Debit/Credit Card or PayPal</button>
     </div>
     
     <!-- PayPal Button Container (hidden by default) -->
-    <div id="paypal-button-container"></div>
+    <div id="paypal-button-container" style="display: none;"></div>
   </section>
 
   <!-- Message Box -->
@@ -159,7 +165,6 @@
 
   <script>
     let currentUser = null;
-    let paypalRendered = false;
 
     // Pay with Main Balance
     async function payWithMainBalance() {
@@ -199,7 +204,7 @@
       }
     }
 
-    // Show PayPal button
+    // Show PayPal button (like in buy.html)
     function showPayPalButton() {
       if (!currentUser) {
         showMessage("❌ Please log in first.", false);
@@ -210,11 +215,11 @@
       document.getElementById('mainButtons').style.display = 'none';
       document.getElementById('paypal-button-container').style.display = 'block';
       
-      // Show info message
+      // Show info message (like your alert in the original)
       alert("ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.");
       
-      // Render PayPal button if not already rendered
-      if (!paypalRendered && typeof paypal !== 'undefined') {
+      // Render PayPal button (same pattern as buy.html)
+      if (typeof paypal !== 'undefined') {
         paypal.Buttons({
           style: { 
             color: 'gold', 
@@ -239,7 +244,7 @@
             return actions.order.capture().then(async function(details) {
               console.log(`Payment successful! Thank you, ${details.payer.name.given_name}.`);
               
-              // Update software fee status
+              // Update software fee status in Firebase
               await db.ref('users/' + currentUser.uid).update({ 
                 appFee: "Paid" 
               });
@@ -261,7 +266,7 @@
           },
 
           onError: function(err) {
-            console.error("PayPal error:", err);
+            console.error('PayPal error:', err);
             showMessage("❌ Payment failed. Please try again.", false);
             // Show regular buttons again
             document.getElementById('mainButtons').style.display = 'flex';
@@ -269,8 +274,9 @@
           }
 
         }).render('#paypal-button-container');
-        
-        paypalRendered = true;
+      } else {
+        console.error('PayPal SDK not loaded');
+        showMessage("❌ Payment system unavailable. Please try again later.", false);
       }
     }
 
