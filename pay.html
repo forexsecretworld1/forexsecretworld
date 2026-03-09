@@ -66,13 +66,6 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(255, 196, 57, 0.4);
     }
-    
-    #paypal-button-container {
-      margin-top: 20px;
-      max-width: 300px;
-      margin-left: auto;
-      margin-right: auto;
-    }
   </style>
 </head>
 <body>
@@ -101,12 +94,9 @@
     
     <!-- Payment Buttons -->
     <div class="payment-buttons" id="mainButtons">
-      <button type="button" class="payment-btn payWithMainBalance" onclick="payWithMainBalance()">Pay with Main Balance</button>
-      <button type="button" class="payment-btn payWithPaypal" onclick="showPayPalButton()">Debit/Credit Card or PayPal</button>
+      <button type="button" class="payment-btn payWithMainBalance" onclick="window.location.href='mainBalancePay.html'">Pay with Main Balance</button>
+      <button type="button" class="payment-btn payWithPaypal" onclick="payWithPaypal()">Debit/Credit Card or PayPal</button>
     </div>
-    
-    <!-- PayPal Button Container (hidden by default) -->
-    <div id="paypal-button-container" style="display: none;"></div>
   </section>
 
   <!-- Message Box -->
@@ -160,74 +150,33 @@
     }
   </script>
 
-  <!-- Load PayPal SDK with your client ID -->
+  <!-- Load PayPal SDK -->
   <script src="https://www.paypal.com/sdk/js?client-id=ATMbyWh7-xm6nqFl4Biy_WazK0Zacj7fnqTlVvHn5jx7mvOUcaBpqXxMHgcYM1D2nmk1Nva_SZXjtrpn&currency=USD"></script>
 
   <script>
     let currentUser = null;
 
-    // Pay with Main Balance
-    async function payWithMainBalance() {
+    // Pay with PayPal - OPENS PAYPAL PAYMENT PAGE DIRECTLY
+    function payWithPaypal() {
       if (!currentUser) {
         showMessage("❌ Please log in first.", false);
         return;
       }
 
-      const uid = currentUser.uid;
-      
-      try {
-        // Get user's main balance
-        const snapshot = await db.ref('users/' + uid).once('value');
-        const userData = snapshot.val();
-        const mainBalance = parseFloat(userData.mainBalance || 0);
-        
-        if (mainBalance >= 46) {
-          // Deduct from main balance
-          const newBalance = mainBalance - 46;
-          await db.ref('users/' + uid).update({ 
-            mainBalance: newBalance.toFixed(2),
-            appFee: "Paid" 
-          });
-          
-          showMessage("✅ Payment successful! Redirecting to phases...", true);
-          
-          // Redirect to phases after 2 seconds
-          setTimeout(() => {
-            window.location.href = "phases.html";
-          }, 2000);
-        } else {
-          showMessage("❌ Insufficient main balance. Need $46.00", false);
-        }
-      } catch (error) {
-        console.error("Error processing payment:", error);
-        showMessage("❌ Error processing payment. Please try again.", false);
-      }
-    }
-
-    // Show PayPal button (like in buy.html)
-    function showPayPalButton() {
-      if (!currentUser) {
-        showMessage("❌ Please log in first.", false);
-        return;
-      }
-
-      // Hide regular buttons, show PayPal container
-      document.getElementById('mainButtons').style.display = 'none';
-      document.getElementById('paypal-button-container').style.display = 'block';
-      
-      // Show info message (like your alert in the original)
+      // Show info message
       alert("ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.");
       
-      // Render PayPal button (same pattern as buy.html)
+      // Create PayPal order and redirect to payment page
       if (typeof paypal !== 'undefined') {
         paypal.Buttons({
           style: { 
-            color: 'gold', 
-            shape: 'rect', 
-            label: 'paypal', 
-            height: 40 
+            layout: 'horizontal',
+            color: 'gold',
+            shape: 'rect',
+            label: 'paypal',
+            height: 40
           },
-
+          
           createOrder: function(data, actions) {
             return actions.order.create({
               purchase_units: [{
@@ -236,7 +185,10 @@
                   currency_code: "USD", 
                   value: "46.00" 
                 }
-              }]
+              }],
+              application_context: {
+                shipping_preference: 'NO_SHIPPING'
+              }
             });
           },
 
@@ -260,23 +212,29 @@
 
           onCancel: function() {
             console.log("Payment cancelled.");
-            // Show regular buttons again
-            document.getElementById('mainButtons').style.display = 'flex';
-            document.getElementById('paypal-button-container').style.display = 'none';
+            showMessage("Payment cancelled.", false);
           },
 
           onError: function(err) {
             console.error('PayPal error:', err);
             showMessage("❌ Payment failed. Please try again.", false);
-            // Show regular buttons again
-            document.getElementById('mainButtons').style.display = 'flex';
-            document.getElementById('paypal-button-container').style.display = 'none';
           }
 
-        }).render('#paypal-button-container');
+        }).render('body'); // Render to body temporarily
+        
+        // Find the PayPal button and click it programmatically
+        setTimeout(() => {
+          const paypalButton = document.querySelector('.paypal-button');
+          if (paypalButton) {
+            paypalButton.click();
+          } else {
+            // Alternative: create a redirect link
+            window.location.href = "https://www.paypal.com/ncp/payment/8SRLDNT7NLACS";
+          }
+        }, 500);
       } else {
-        console.error('PayPal SDK not loaded');
-        showMessage("❌ Payment system unavailable. Please try again later.", false);
+        // Fallback to direct link
+        window.location.href = "https://www.paypal.com/ncp/payment/8SRLDNT7NLACS";
       }
     }
 
