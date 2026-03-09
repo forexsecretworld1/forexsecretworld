@@ -64,6 +64,11 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(255, 196, 57, 0.4);
     }
+    
+    #paypal-button-container {
+      margin-top: 20px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -88,11 +93,14 @@
 
   <!-- Pay Buttons Section -->
   <section class="payment-section">
-    <h2>Pay software fee</h2>
-    <div class="payment-buttons">
+    <h2>Pay software fee - $46.00</h2>
+    <div class="payment-buttons" id="mainButtons">
       <button type="button" class="payment-btn payWithMainBalance" onclick="payWithMainBalance()">Pay with Main Balance</button>
-      <button type="button" class="payment-btn payWithPaypal" onclick="payWithPaypal()">Debit/Credit Card or PayPal</button>
+      <button type="button" class="payment-btn payWithPaypal" onclick="showPayPalButton()">Debit/Credit Card or PayPal</button>
     </div>
+    
+    <!-- PayPal Button Container (hidden by default) -->
+    <div id="paypal-button-container"></div>
   </section>
 
   <!-- Message Box -->
@@ -146,8 +154,12 @@
     }
   </script>
 
+  <!-- Load PayPal SDK with your client ID -->
+  <script src="https://www.paypal.com/sdk/js?client-id=ATMbyWh7-xm6nqFl4Biy_WazK0Zacj7fnqTlVvHn5jx7mvOUcaBpqXxMHgcYM1D2nmk1Nva_SZXjtrpn&currency=USD"></script>
+
   <script>
     let currentUser = null;
+    let paypalRendered = false;
 
     // Pay with Main Balance
     async function payWithMainBalance() {
@@ -179,7 +191,7 @@
             window.location.href = "phases.html";
           }, 2000);
         } else {
-          showMessage("❌ Insufficient main balance.", false);
+          showMessage("❌ Insufficient main balance. Need $46.00", false);
         }
       } catch (error) {
         console.error("Error processing payment:", error);
@@ -187,15 +199,79 @@
       }
     }
 
-    // Pay with PayPal
-    function payWithPaypal() {
+    // Show PayPal button
+    function showPayPalButton() {
       if (!currentUser) {
         showMessage("❌ Please log in first.", false);
         return;
       }
 
+      // Hide regular buttons, show PayPal container
+      document.getElementById('mainButtons').style.display = 'none';
+      document.getElementById('paypal-button-container').style.display = 'block';
+      
+      // Show info message
       alert("ℹ️ Full access to FluxiTrade can take up to 24 hours after successful payment.");
-      window.location.href = "https://www.paypal.com/ncp/payment/8SRLDNT7NLACS";
+      
+      // Render PayPal button if not already rendered
+      if (!paypalRendered && typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          style: { 
+            color: 'gold', 
+            shape: 'rect', 
+            label: 'paypal', 
+            height: 40 
+          },
+
+          createOrder: function(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                description: "FluxiTrade Software Access",
+                amount: { 
+                  currency_code: "USD", 
+                  value: "46.00" 
+                }
+              }]
+            });
+          },
+
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(async function(details) {
+              console.log(`Payment successful! Thank you, ${details.payer.name.given_name}.`);
+              
+              // Update software fee status
+              await db.ref('users/' + currentUser.uid).update({ 
+                appFee: "Paid" 
+              });
+              
+              showMessage("✅ Payment successful! Redirecting to phases...", true);
+              
+              // Redirect to phases after 2 seconds
+              setTimeout(() => {
+                window.location.href = "phases.html";
+              }, 2000);
+            });
+          },
+
+          onCancel: function() {
+            console.log("Payment cancelled.");
+            // Show regular buttons again
+            document.getElementById('mainButtons').style.display = 'flex';
+            document.getElementById('paypal-button-container').style.display = 'none';
+          },
+
+          onError: function(err) {
+            console.error("PayPal error:", err);
+            showMessage("❌ Payment failed. Please try again.", false);
+            // Show regular buttons again
+            document.getElementById('mainButtons').style.display = 'flex';
+            document.getElementById('paypal-button-container').style.display = 'none';
+          }
+
+        }).render('#paypal-button-container');
+        
+        paypalRendered = true;
+      }
     }
 
     // Listen for auth state
