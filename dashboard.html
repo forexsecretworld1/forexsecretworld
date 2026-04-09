@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +7,18 @@
   <title>FOREX SECRET WORLD</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .message-box {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 5px;
+      color: white;
+      display: none;
+      z-index: 9999;
+    }
+  </style>
 </head>
 <body>
   <div class="header">
@@ -23,7 +36,7 @@
             <li><a href="phases.html">View phases</a></li>
             <li><a href="profile.html">Upload documents</a></li>
             <li><a href="profile.html">Profile</a></li>
-            <li><a href="index.html">Logout</a></li>
+            <li><a href="#" id="logoutBtn">Logout</a></li>
           </ul>
         </nav>
         <img src="menue.png" class="menue-icon" onclick="menutoggle()">
@@ -38,42 +51,23 @@
             <p>Name: <span id="userName">Loading...</span></p>
           </div>
 
-
-<!-- Account Table inside scrollable container -->
-<div class="table-container">
-  <table class="account-table" border="1" cellspacing="0" cellpadding="8">
-    <thead>
-      <tr>
-        <th>Account</th>
-        <th>Balance</th>
-        <th>Phases</th>
-        <th>Password</th>
-        <th>Software fee status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>
-          123456789 <br>
-          ForexSecretWorld
-        </td>
-        <td>$0.00</td>
-        <td>
-          <button id="viewBtn" class="btn-action view">View</button>
-        </td>
-        <td>
-          <input type="password" value="huy4528hgy" id="passwordField" readonly>
-          <button id="toggleBtn" onclick="togglePassword()" style="border:none; background:none; cursor:pointer;">
-          👁️
-          </button>
-        </td>
-        <td>Unpaid</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-
+          <!-- Account Table inside scrollable container -->
+          <div class="table-container">
+            <table class="account-table" border="1" cellspacing="0" cellpadding="8">
+              <thead>
+                <tr>
+                  <th>Account</th>
+                  <th>Balance</th>
+                  <th>Phases</th>
+                  <th>Password</th>
+                  <th>Software fee status</th>
+                </tr>
+              </thead>
+              <tbody id="tradingAccountBody">
+                <tr><td colspan="5">Loading trading account...</td></tr>
+              </tbody>
+            </table>
+          </div>
 
           <!-- Buttons BELOW the table -->
           <div class="action-buttons">
@@ -82,51 +76,31 @@
             <button class="btn-action transfer" onclick="window.location.href='transfer.html'">Transfer funds</button>
           </div>
 
-<!-- Platforms Table inside scrollable container -->
-<div class="table-container">
-  <table class="account-table" border="1" cellspacing="0" cellpadding="8">
-    <thead>
-      <tr>
-        <th>Platforms</th>
-        <th>Supported</th>
-        <th>Software Fee</th>
-        <th>Android version</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>MT4</td>
-        <td>❌</td>
-        <td>Free</td>
-        <td><button class="btn2-action download grey">Download</button></td>
-      </tr>
-      <tr>
-        <td>MT5</td>
-        <td>❌</td>
-        <td>Free</td>
-        <td><button class="btn2-action download grey">Download</button></td>
-      </tr>
-      <tr>
-        <td>FluxiTrade</td>
-        <td>✅</td>
-        <td><button class="btn2-action pay" onclick="window.location.href='pay.html'">Pay</button></td>
-        <td><button class="btn2-action download green" onclick="downloadApp()">Download</button></td>
-      </tr>
-      <tr>
-        <td>cTrader</td>
-        <td>❌</td>
-        <td>Free</td>
-        <td><button class="btn2-action download grey">Download</button></td>
-      </tr>
-      <tr>
-        <td>TradingView</td>
-        <td>❌</td>
-        <td>Free</td>
-        <td><button class="btn2-action download grey">Download</button></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+          <!-- Platforms Table -->
+          <div class="table-container">
+            <table class="account-table" border="1" cellspacing="0" cellpadding="8">
+              <thead>
+                <tr>
+                  <th>Platforms</th>
+                  <th>Supported</th>
+                  <th>Software Fee</th>
+                  <th>Android version</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>MT4</td><td>❌</td><td>Free</td><td><button class="btn2-action download grey">Download</button></td></tr>
+                <tr><td>MT5</td><td>❌</td><td>Free</td><td><button class="btn2-action download grey">Download</button></td></tr>
+                <tr>
+                  <td>FluxiTrade</td>
+                  <td>✅</td>
+                  <td><button class="btn2-action pay" onclick="window.location.href='pay.html'">Pay</button></td>
+                  <td><button class="btn2-action download green" onclick="downloadApp()">Download</button></td>
+                </tr>
+                <tr><td>cTrader</td><td>❌</td><td>Free</td><td><button class="btn2-action download grey">Download</button></td></tr>
+                <tr><td>TradingView</td><td>❌</td><td>Free</td><td><button class="btn2-action download grey">Download</button></td></tr>
+              </tbody>
+            </table>
+          </div>
 
           <!-- Terms and Conditions -->
           <div class="terms-section" style="margin-top:20px;">
@@ -138,7 +112,7 @@
               leverage available is 1:1000; however, leverage may be reduced during major news events to 
               encourage proper risk management, while still allowing greater profit opportunities. Each 
               funding contract is valid for a period of 30 days and has a minimum funding of $500. Traders 
-              can be granted more than $500 depending on a trader's perfomance, only trading within London
+              can be granted more than $500 depending on a trader's performance, only trading within London
               and New York sessions is permitted only on this time interval (09:00 AM to 00:00 AM, Time zone: GMT+3 ),
               all opened positions beyond this time interval will be closed automatically. If a trader fails 
               to meet the minimum profit target required in any phase, the funding contract will be 
@@ -146,7 +120,6 @@
               trading practices, maintain the integrity of the program, and long-term success.
             </p>
           </div>
-
         </div>
       </div>
     </div>
@@ -156,358 +129,210 @@
   <div class="footer">
     <div class="container">
       <div class="row">
-        <div class="footer-col-1">
-          <img src="logo2.png">
-        </div>
-        <div class="footer-col-2">
-          <p>Our purpose is to make sure that some traders, those who are lucky become successful.</p>
-        </div>
+        <div class="footer-col-1"><img src="logo2.png"></div>
+        <div class="footer-col-2"><p>Our purpose is to make sure that some traders, those who are lucky become successful.</p></div>
       </div>
     </div>
     <hr>
     <p class="copyright">Copyright 1988-2025 : Forex secret world</p>
   </div>
 
-<script>
-  var MenuItems = document.getElementById("MenuItems");
-  var menuBtn = document.querySelector(".menue-icon");
+  <!-- Message Box -->
+  <div id="messageBox" class="message-box"></div>
 
-  // Initially collapse menu
-  MenuItems.style.maxHeight = "0px";
+  <script>
+    // Menu toggle
+    var MenuItems = document.getElementById("MenuItems");
+    var menuBtn = document.querySelector(".menue-icon");
+    MenuItems.style.maxHeight = "0px";
 
-  // Toggle menu on button click
-  function menutoggle() {
-    if (MenuItems.style.maxHeight === "0px") {
-      MenuItems.style.maxHeight = MenuItems.scrollHeight + "px"; // dynamic height
-    } else {
-      MenuItems.style.maxHeight = "0px";
-    }
-  }
-
-  // Close menu if user clicks outside
-  document.addEventListener("click", function(event) {
-    if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
-      MenuItems.style.maxHeight = "0px";
-    }
-  });
-</script>
-
-<script>
-function togglePassword() {
-  const pwdField = document.getElementById("passwordField");
-  const btn = document.getElementById("toggleBtn");
-
-  if (pwdField.type === "password") {
-    pwdField.type = "text";     // show password
-    btn.textContent = "🙈";     // change to money face
-  } else {
-    pwdField.type = "password"; // hide password
-    btn.textContent = "👁️";    // change back to eye
-  }
-}
-</script>
-
-
-<!-- fetched user info --------------------------------------------------------------------------------------------------------->
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-
-// 🔹 Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
-  authDomain: "black-dox.firebaseapp.com",
-  databaseURL: "https://black-dox.firebaseio.com",
-  projectId: "black-dox",
-  storageBucket: "black-dox.appspot.com",
-  messagingSenderId: "45035762443",
-  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
-  measurementId: "G-B7HB0T95TP"
-};
-// 🔹 Init
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-const viewBtn = document.getElementById("viewBtn");
-
-// 🔹 Watch login state
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const uid = user.uid;
-
-    try {
-      const snapshot = await get(child(ref(db), "userInfo/" + uid));
-      if (snapshot.exists()) {
-        const userData = snapshot.val();
-
-        // ✅ Update HTML elements
-        document.getElementById("userName").textContent = userData.fullName || "Loading...";
-        document.getElementById("mainBalance").textContent = `$${userData.mainBalance || "0.00"}`;
-
+    function menutoggle() {
+      if (MenuItems.style.maxHeight === "0px") {
+        MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
       } else {
-        console.log("No user data found");
+        MenuItems.style.maxHeight = "0px";
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  } else {
-    // 🔹 Not logged in → send back to login
-    window.location.href = "login.html";
-  }
-});
-</script>
-
-
-
-<!-- fetched requested funds status --------------------------------------------------------------------------------------------------------->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
-  authDomain: "black-dox.firebaseapp.com",
-  databaseURL: "https://black-dox.firebaseio.com",
-  projectId: "black-dox",
-  storageBucket: "black-dox.appspot.com",
-  messagingSenderId: "45035762443",
-  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
-  measurementId: "G-B7HB0T95TP"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-const menuLink = document.getElementById("requestFundsLink");
-const btn = document.getElementById("requestFundsBtn");
-
-// Unified handler
-async function handleRequestFunds(e) {
-  e.preventDefault();
-
-  const savedEmail = localStorage.getItem("savedEmail");
-  const savedPassword = localStorage.getItem("savedPassword");
-
-  if (!savedEmail || !savedPassword) {
-    alert("You are not logged in. Please log in first.");
-    return;
-  }
-
-  try {
-    // 🔹 Auto login using local storage
-    const userCredential = await signInWithEmailAndPassword(auth, savedEmail, savedPassword);
-    const user = userCredential.user; // ALWAYS use this user object
-
-    console.log("User logged in:", user.uid);
-
-    // 🔹 Safely fetch only this user's request node
-    const userRef = ref(db, `usersRequestingFunds/${user.uid}`);
-    const snapshot = await get(userRef);
-
-    if (snapshot.exists()) {
-      console.log("Request exists:", snapshot.val());
-      window.location.href = "status.html";
-    } else {
-      console.log("No request found, redirecting to request page");
-      window.location.href = "request_funds.html";
     }
 
-  } catch (err) {
-    console.error("Error during login or fetching request:", err);
-    if (err.code && err.code.startsWith("auth/")) {
-      alert("Login failed. Please check your credentials.");
-    } else {
-      alert("Could not fetch request status. Please try again later.");
+    document.addEventListener("click", function(event) {
+      if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
+        MenuItems.style.maxHeight = "0px";
+      }
+    });
+
+    function showMessage(message, isSuccess = false) {
+      const box = document.getElementById("messageBox");
+      box.textContent = message;
+      box.style.background = isSuccess ? "#4CAF50" : "#f44336";
+      box.style.display = "block";
+      setTimeout(() => {
+        box.style.display = "none";
+      }, 4000);
     }
-  }
-}
+  </script>
 
-menuLink.addEventListener("click", handleRequestFunds);
-btn.addEventListener("click", handleRequestFunds);
-</script>
+  <!-- Main Dashboard Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-
-<!-- fetched trading account data --------------------------------------------------------------------------------------------------------->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getAuth, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
-  authDomain: "black-dox.firebaseapp.com",
-  databaseURL: "https://black-dox.firebaseio.com",
-  projectId: "black-dox",
-  storageBucket: "black-dox.appspot.com",
-  messagingSenderId: "45035762443",
-  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
-  measurementId: "G-B7HB0T95TP"
-};
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-const tbody = document.querySelector(".account-table tbody");
-const userNameEl = document.getElementById("userName");
-const mainBalanceEl = document.getElementById("mainBalance");
-tbody.innerHTML = "";
-userNameEl.textContent = "Loading...";
-mainBalanceEl.textContent = "$0.00";
-
-const localData = JSON.parse(localStorage.getItem("savedUserInfo") || "{}");
-const accountNumber = localData.accountNumber || "";
-const password = localData.password || "";
-const originalUserName = localData.fullName || "Loading...";
-const originalMainBalance = localData.mainBalance || "0.00";
-
-// Set profile name and main balance first
-userNameEl.textContent = originalUserName;
-mainBalanceEl.textContent = `$${originalMainBalance}`;
-
-async function fetchTradingAccount() {
-  if (!accountNumber || !password) {
-    tbody.innerHTML = "<tr><td colspan='5'>Please log in</td></tr>";
-    return;
-  }
-
-  try {
-    // Sign out silently
-    if (auth.currentUser) await signOut(auth);
-
-    // Login with trading account email
-    const email = accountNumber + "@fluxitrade.com";
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    // Fetch trading account data
-    const snapshot = await get(ref(db, `users/${user.uid}`));
-    if (!snapshot.exists()) {
-      tbody.innerHTML = "<tr><td colspan='5'>No trading account yet</td></tr>";
-      return;
-    }
-
-    const data = snapshot.val();
-    const passwordId = `password-${user.uid}`;
-    const toggleId = `toggle-${user.uid}`;
-
-    // Update table only (do NOT change profile name)
-    tbody.innerHTML = `
-      <tr>
-        <td>${data.accountNumber || ""}<br>ForexSecretWorld</td>
-        <td>$${data.balance ?? "0.00"}</td>
-        <td><button id="viewBtn" class="btn-action view">View</button></td>
-        <td>
-          <input type="password" value="${data.password || ""}" id="${passwordId}" readonly>
-          <button id="${toggleId}" style="border:none; background:none; cursor:pointer;">👁️</button>
-        </td>
-        <td>${data.appFee || "Unpaid"}</td>
-      </tr>
-    `;
-
-    // Toggle password visibility
-    document.getElementById(toggleId).onclick = () => {
-      const field = document.getElementById(passwordId);
-      field.type = field.type === "password" ? "text" : "password";
+    const firebaseConfig = {
+      apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
+      authDomain: "black-dox.firebaseapp.com",
+      databaseURL: "https://black-dox.firebaseio.com",
+      projectId: "black-dox",
+      storageBucket: "black-dox.appspot.com",
+      messagingSenderId: "45035762443",
+      appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
+      measurementId: "G-B7HB0T95TP"
     };
 
-    // View button logic - check deposit amount from users node
-    document.getElementById("viewBtn").onclick = async () => {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentUser = null;
+    let currentUid = null;
+
+    // Logout function
+    document.getElementById("logoutBtn").addEventListener("click", async (e) => {
+      e.preventDefault();
+      await signOut(auth);
+      localStorage.removeItem("savedEmail");
+      localStorage.removeItem("savedPassword");
+      localStorage.removeItem("savedUserInfo");
+      window.location.href = "login.html";
+    });
+
+    // Check authentication and load user data
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+      currentUid = user.uid;
+      console.log("User logged in:", currentUid);
+
       try {
-        const userNode = await get(ref(db, `users/${user.uid}`));
-        const deposit = parseFloat(userNode.val()?.deposit ?? 0);
-
-        if (deposit === 500) {
-          window.location.href = "phases.html";
-        } else {
-          window.location.href = "phases2.html";
+        // Load user info from userInfo node
+        const userInfoSnap = await get(child(ref(db), `users/${currentUid}`));
+        if (userInfoSnap.exists()) {
+          const userData = userInfoSnap.val();
+          document.getElementById("userName").textContent = userData.name || "User";
+          document.getElementById("mainBalance").textContent = `$${userData.mainBalance || "0.00"}`;
         }
-      } catch (err) {
-        console.error("Error checking deposit:", err);
-        alert("Failed to check deposit amount.");
+
+        // Load trading account using uid2 from userInfo
+        const uid2Snap = await get(child(ref(db), `userInfo/${currentUid}/uid2`));
+        
+        const tbody = document.getElementById("tradingAccountBody");
+        
+        if (uid2Snap.exists()) {
+          const uid2 = uid2Snap.val();
+          const tradingAccountSnap = await get(child(ref(db), `users/${uid2}`));
+          
+          if (tradingAccountSnap.exists()) {
+            const tradingData = tradingAccountSnap.val();
+            
+            tbody.innerHTML = `
+              <tr>
+                <td>${tradingData.accountNumber || "N/A"}<br>ForexSecretWorld</td>
+                <td>$${tradingData.balance?.toFixed(2) || "0.00"}</td>
+                <td><button id="viewBtn" class="btn-action view">View</button></td>
+                <td>
+                  <input type="password" value="${tradingData.accountPassword || ""}" id="tradingPassword" readonly>
+                  <button id="toggleTradingPwd" style="border:none; background:none; cursor:pointer;">👁️</button>
+                </td>
+                <td>${tradingData.appFee || "Unpaid"}</td>
+              </tr>
+            `;
+            
+            // Toggle password visibility
+            const toggleBtn = document.getElementById("toggleTradingPwd");
+            if (toggleBtn) {
+              toggleBtn.onclick = () => {
+                const pwdField = document.getElementById("tradingPassword");
+                pwdField.type = pwdField.type === "password" ? "text" : "password";
+              };
+            }
+            
+            // View button - redirect to phases
+            const viewBtn = document.getElementById("viewBtn");
+            if (viewBtn) {
+              viewBtn.onclick = () => {
+                window.location.href = "phases.html";
+              };
+            }
+          } else {
+            tbody.innerHTML = '<tr><td colspan="5">No trading account found</td></tr>';
+          }
+        } else {
+          tbody.innerHTML = '<tr><td colspan="5">No trading account assigned yet</td></tr>';
+        }
+        
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        showMessage("Error loading dashboard data", false);
       }
-    };
+    });
 
-  } catch (err) {
-    console.error("Error fetching trading account:", err);
-    tbody.innerHTML = "<tr><td colspan='5'>Failed to load trading account</td></tr>";
-  }
-}
+    // Request funds handler
+    const requestFundsLink = document.getElementById("requestFundsLink");
+    const requestFundsBtn = document.getElementById("requestFundsBtn");
 
-// Run on page load
-fetchTradingAccount();
-</script>
+    async function handleRequestFunds(e) {
+      e.preventDefault();
+      
+      if (!currentUid) {
+        showMessage("Please wait, loading user data...", false);
+        return;
+      }
+      
+      try {
+        // Check if user already has a pending request
+        const requestSnap = await get(child(ref(db), `usersRequestingFunds/${currentUid}`));
+        
+        if (requestSnap.exists()) {
+          window.location.href = "status.html";
+        } else {
+          // Check if user already has a trading account
+          const uid2Snap = await get(child(ref(db), `userInfo/${currentUid}/uid2`));
+          if (uid2Snap.exists()) {
+            const uid2 = uid2Snap.val();
+            const tradingSnap = await get(child(ref(db), `users/${uid2}`));
+            if (tradingSnap.exists()) {
+              showMessage("You already have an active trading account.", false);
+              return;
+            }
+          }
+          window.location.href = "request_funds.html";
+        }
+      } catch (error) {
+        console.error("Error checking request status:", error);
+        showMessage("Error checking request status", false);
+      }
+    }
 
+    if (requestFundsLink) requestFundsLink.addEventListener("click", handleRequestFunds);
+    if (requestFundsBtn) requestFundsBtn.addEventListener("click", handleRequestFunds);
+  </script>
 
-<!-- Download app --------------------------------------------------------------------------------------------------------->
-<script>
-  function downloadApp() {
-    // Create a temporary hidden link
-    const link = document.createElement('a');
-    link.href = 'app-release.apk';  // path to your APK file
-    link.download = 'app-release.apk'; // file name for saving
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-</script>
-
-
-
+  <!-- Download app -->
+  <script>
+    function downloadApp() {
+      const link = document.createElement('a');
+      link.href = 'app-release.apk';
+      link.download = 'app-release.apk';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
