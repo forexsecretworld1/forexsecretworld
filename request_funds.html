@@ -5,41 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forex Secret World - Request Funds</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-  
-  <style>
-    .body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .terms-checkbox {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 15px 0;
-    }
-    .terms-checkbox input {
-      width: auto;
-      margin: 0;
-    }
-    .message-box {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 5px;
-      color: white;
-      display: none;
-      z-index: 9999;
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -61,82 +27,69 @@
     </div>
   </div>
 
-  <div class="body">
-    <!-- Request funds Form -->
-    <div class="signup-container">
-      <h2>Request Trading Funds</h2>
-      <form id="fundRequestForm">
-        <input type="text" id="fullName" placeholder="Full Name" required>
-        <input type="email" id="email" placeholder="Email Address" required>
-        <input type="tel" id="phone" placeholder="Phone Number" required>
-        
-        <select id="country" required>
-          <option value="" disabled selected>Select your country</option>
-          <option value="US">United States</option>
-          <option value="GB">United Kingdom</option>
-          <option value="LS">Lesotho</option>
-          <option value="ZA">South Africa</option>
-          <option value="NG">Nigeria</option>
-          <option value="IN">India</option>
-        </select>
-        
-        <input type="text" id="address" placeholder="Address line 1" required>
-        <input type="text" id="suburb" placeholder="Suburb" required>
-        <input type="text" id="city" placeholder="City/Town" required>
-        <input type="text" id="postalCode" placeholder="Postal code" required>
-        <input type="text" id="province" placeholder="District/Province" required>
+  <!-- Request funds Form -->
+  <div class="signup-container">
+    <h2>Request Trading Funds</h2>
+    <form id="fundRequestForm">
+      <input type="text" id="fullName" placeholder="Full Name" required>
+      <input type="email" id="email" placeholder="Email Address" required>
+      <input type="tel" id="phone" placeholder="Phone Number" required>
+      <select required>
+        <option value="">Select Country</option>
+        <option value="usa">USA</option>
+        <option value="uk">UK</option>
+        <option value="canada">Canada</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="address" placeholder="Address line 1" required>
+      <input type="suburb" placeholder="Suburb" required>
+      <input type="city" placeholder="City/Town" required>
+      <input type="code" placeholder="Postal code" required>
+      <input type="province" placeholder="District/Province" required>
 
-        <!-- Trading Knowledge Questions -->
-        <h3>Trading Knowledge Questions</h3>
-        
-        <label>1. How long have you been trading?</label>
-        <select id="tradingExperience" required>
-          <option value="">Select an option</option>
-          <option value="less1">Less than 1 year</option>
-          <option value="1to3">1 - 3 years</option>
-          <option value="3to5">3 - 5 years</option>
-          <option value="5plus">More than 5 years</option>
-        </select>
-        
-        <label>2. What does "leverage" in trading mean?</label>
-        <select id="leverageKnowledge" required>
-          <option value="">Select an answer</option>
-          <option value="amplifies">It amplifies your potential profit and loss</option>
-          <option value="fixed">It fixes your trading fee</option>
-          <option value="insurance">It protects your capital completely</option>
-        </select>
-        
-        <label>3. What is a "stop-loss" order?</label>
-        <select id="stopLossKnowledge" required>
-          <option value="">Select an answer</option>
-          <option value="limit-loss">An order to limit potential losses</option>
-          <option value="profit-take">An order to take profit immediately</option>
-          <option value="market-open">An order to open a new position</option>
-        </select>
-        
-        <label>4. Which of these is considered higher risk?</label>
-        <select id="riskKnowledge" required>
-          <option value="">Select an answer</option>
-          <option value="forex">Trading on high leverage forex pairs</option>
-          <option value="savings">Investing in a bank savings account</option>
-          <option value="bonds">Government bonds</option>
-        </select>
+      <!-- Trading Knowledge Questions -->
+      <h3>Trading Knowledge Questions</h3>
+      <label>1. How long have you been trading?</label>
+      <select required>
+        <option value="">Select an option</option>
+        <option value="less1">Less than 1 year</option>
+        <option value="1to3">1 - 3 years</option>
+        <option value="3to5">3 - 5 years</option>
+        <option value="5plus">More than 5 years</option>
+      </select>
+      <label>2. What does "leverage" in trading mean?</label>
+      <select required>
+        <option value="">Select an answer</option>
+        <option value="amplifies">It amplifies your potential profit and loss</option>
+        <option value="fixed">It fixes your trading fee</option>
+        <option value="insurance">It protects your capital completely</option>
+      </select>
+      <label>3. What is a “stop-loss” order?</label>
+      <select required>
+        <option value="">Select an answer</option>
+        <option value="limit-loss">An order to limit potential losses</option>
+        <option value="profit-take">An order to take profit immediately</option>
+        <option value="market-open">An order to open a new position</option>
+      </select>
+      <label>4. Which of these is considered higher risk?</label>
+      <select required>
+        <option value="">Select an answer</option>
+        <option value="forex">Trading on high leverage forex pairs</option>
+        <option value="savings">Investing in a bank savings account</option>
+        <option value="bonds">Government bonds</option>
+      </select>
 
-        <!-- Terms & Conditions Checkbox -->
-        <div class="terms-checkbox">
-          <input type="checkbox" id="terms" required>
-          <label for="terms">
-            I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a>
-          </label>
-        </div>
+      <!-- Terms & Conditions Checkbox -->
+      <div class="terms-checkbox">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">
+          I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a>
+        </label>
+      </div>
 
-        <button type="submit">Submit Request</button>
-      </form>
-    </div>
+      <button type="submit">Submit</button>
+    </form>
   </div>
-
-  <!-- Message Box -->
-  <div id="messageBox" class="message-box"></div>
 
   <!-- Original Footer -->
   <div class="footer">
@@ -156,183 +109,242 @@
 
   <!-- JS -->
   <script>
-    // Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCsdWCeIhvukSUM_8V3x7VneNtRaZf96YY",
-      authDomain: "fluxitrade.firebaseapp.com",
-      databaseURL: "https://fluxitrade-default-rtdb.firebaseio.com",
-      projectId: "fluxitrade",
-      storageBucket: "fluxitrade.firebasestorage.app",
-      messagingSenderId: "594575269059",
-      appId: "1:594575269059:web:c1faccf7a13689c9111676",
-      measurementId: "G-NTQSJ4LBC7"
-    };
-
-    // Initialize Firebase if not already initialized
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-
-    const auth = firebase.auth();
-    const db = firebase.database();
-
-    // Menu toggle
     var MenuItems = document.getElementById("MenuItems");
     var menuBtn = document.querySelector(".menue-icon");
+
+    // Initially collapse menu
     MenuItems.style.maxHeight = "0px";
 
+    // Toggle menu on button click
     function menutoggle() {
       if (MenuItems.style.maxHeight === "0px") {
-        MenuItems.style.maxHeight = MenuItems.scrollHeight + "px";
+        MenuItems.style.maxHeight = MenuItems.scrollHeight + "px"; // dynamic height
       } else {
         MenuItems.style.maxHeight = "0px";
       }
     }
 
+    // Close menu if user clicks outside
     document.addEventListener("click", function(event) {
       if (!MenuItems.contains(event.target) && !menuBtn.contains(event.target)) {
         MenuItems.style.maxHeight = "0px";
       }
     });
-
-    function showMessage(message, isSuccess = false) {
-      const box = document.getElementById("messageBox");
-      box.textContent = message;
-      box.style.background = isSuccess ? "#4CAF50" : "#f44336";
-      box.style.display = "block";
-      setTimeout(() => {
-        box.style.display = "none";
-      }, 5000);
-    }
-
-    // Flag to prevent multiple redirects
-    let redirecting = false;
-
-    // Check if user can request funds on page load
-    auth.onAuthStateChanged(async (user) => {
-      if (redirecting) return;
-      
-      if (!user) {
-        redirecting = true;
-        showMessage("Please log in to request funds.", false);
-        setTimeout(() => {
-          window.location.href = "login.html";
-        }, 1500);
-        return;
-      }
-
-      try {
-        // Check if user already has a pending request
-        const requestSnap = await db.ref(`usersRequestingFunds/${user.uid}`).once('value');
-        if (requestSnap.exists()) {
-          redirecting = true;
-          showMessage("You already have a pending request. Please wait for approval.", false);
-          setTimeout(() => {
-            window.location.href = "status.html";
-          }, 2000);
-          return;
-        }
-
-        // Check if user already has a trading account
-        const userInfoSnap = await db.ref(`userInfo/${user.uid}/uid2`).once('value');
-        if (userInfoSnap.exists()) {
-          const uid2 = userInfoSnap.val();
-          const tradingAccountSnap = await db.ref(`users/${uid2}`).once('value');
-          if (tradingAccountSnap.exists()) {
-            redirecting = true;
-            showMessage("You already have an active trading account.", false);
-            setTimeout(() => {
-              window.location.href = "dashboard.html";
-            }, 2000);
-            return;
-          }
-        }
-        
-        // If we reach here, user can see the form
-        console.log("User can request funds");
-        
-      } catch (error) {
-        console.error("Error checking user status:", error);
-      }
-    });
-
-    // Form submission
-    const form = document.getElementById("fundRequestForm");
-    
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const user = auth.currentUser;
-      if (!user) {
-        showMessage("You must be logged in to submit a request!", false);
-        return;
-      }
-
-      // Get user's password from database
-      try {
-        const passwordSnap = await db.ref(`users/${user.uid}/password`).once('value');
-        const userPassword = passwordSnap.val();
-
-        if (!userPassword) {
-          showMessage("User password not found. Please contact support.", false);
-          return;
-        }
-
-        // Collect form data
-        const formData = {
-          uid: user.uid,
-          password: userPassword,
-          fullName: document.getElementById("fullName").value,
-          email: document.getElementById("email").value,
-          phone: document.getElementById("phone").value,
-          country: document.getElementById("country").value,
-          address: document.getElementById("address").value,
-          suburb: document.getElementById("suburb").value,
-          city: document.getElementById("city").value,
-          postalCode: document.getElementById("postalCode").value,
-          province: document.getElementById("province").value,
-          tradingExperience: document.getElementById("tradingExperience").value,
-          leverageKnowledge: document.getElementById("leverageKnowledge").value,
-          stopLossKnowledge: document.getElementById("stopLossKnowledge").value,
-          riskKnowledge: document.getElementById("riskKnowledge").value,
-          termsAccepted: document.getElementById("terms").checked,
-          submittedAt: Date.now(),
-          status: "Pending"
-        };
-
-        // Validate terms
-        if (!formData.termsAccepted) {
-          showMessage("You must agree to the Terms & Conditions.", false);
-          return;
-        }
-
-        // Check again for existing request (double-check)
-        const existingRequest = await db.ref(`usersRequestingFunds/${user.uid}`).once('value');
-        if (existingRequest.exists()) {
-          showMessage("You already have a pending request.", false);
-          setTimeout(() => {
-            window.location.href = "status.html";
-          }, 2000);
-          return;
-        }
-
-        // Save the request
-        await db.ref(`usersRequestingFunds/${user.uid}`).set(formData);
-        showMessage("✅ Your request has been submitted successfully!", true);
-        
-        // Clear form
-        form.reset();
-        
-        // Redirect to status page
-        setTimeout(() => {
-          window.location.href = "status.html";
-        }, 2000);
-        
-      } catch (error) {
-        console.error("Submission error:", error);
-        showMessage("Failed to submit request. Please try again.", false);
-      }
-    });
   </script>
+
+<!-- Send user data to database -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+// 🔹 Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
+  authDomain: "black-dox.firebaseapp.com",
+  databaseURL: "https://black-dox.firebaseio.com",
+  projectId: "black-dox",
+  storageBucket: "black-dox.appspot.com",
+  messagingSenderId: "45035762443",
+  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
+  measurementId: "G-B7HB0T95TP"
+};
+// 🔹 Init
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// 🔹 Form
+const form = document.getElementById("fundRequestForm");
+
+// 🔹 Get real user credentials from localStorage
+const realEmail = localStorage.getItem("savedEmail");
+const realPassword = localStorage.getItem("savedPassword");
+
+// 🔹 Logout trading account if logged in
+if (auth.currentUser) {
+  try {
+    await signOut(auth);
+    console.log("Logged out previous account successfully");
+  } catch (err) {
+    console.error("Error logging out previous account:", err);
+  }
+}
+
+// 🔹 Login with real user credentials
+let user;
+if (realEmail && realPassword) {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, realEmail, realPassword);
+    user = userCredential.user;
+    console.log("Logged in with real user:", user.uid);
+  } catch (err) {
+    console.error("Login with real user failed:", err);
+    alert("Failed to login. Please refresh and try again.");
+  }
+} else {
+  alert("No saved user credentials found. Please login first.");
+}
+
+// 🔹 Handle form submit
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  if (!user) {
+    alert("You must be logged in to submit a request!");
+    return;
+  }
+
+  const formData = {
+    uid: user.uid,
+    fullName: document.getElementById("fullName").value,
+    submittedAt: new Date().toISOString(),
+    status: "Pending"
+  };
+
+  try {
+    await set(ref(db, `usersRequestingFunds/${user.uid}`), formData);
+    alert("Your request has been submitted successfully!");
+    form.reset();
+    window.location.href = "status.html";
+  } catch (err) {
+    console.error("Submission error:", err);
+    alert("Failed to submit request. Please try again.");
+  }
+});
+</script>
+
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
