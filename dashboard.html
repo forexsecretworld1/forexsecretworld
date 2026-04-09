@@ -1,18 +1,13 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FOREX SECRET WORLD</title>
   <link rel="stylesheet" href="style.css">
-    <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-<script src="firebase.js"> </script> 
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body><div class="toast" id="toast"></div>
+<body>
   <div class="header">
     <div class="container">
       <div class="navbar">
@@ -24,8 +19,10 @@
             <li><a href="index.html">Home</a></li>
             <li><a href="#" id="requestFundsLink">Request funds</a></li>
             <li><a href="withdraw.html">Withdraw funds</a></li>
-            <li><a href="transfer.html">Transfer Funds</a></li>
-           <li><a href="phases.html">View phases</a></li>
+            <li><a href="transfer.html">Transfer funds</a></li>
+            <li><a href="phases.html">View phases</a></li>
+            <li><a href="profile.html">Upload documents</a></li>
+            <li><a href="profile.html">Profile</a></li>
             <li><a href="index.html">Logout</a></li>
           </ul>
         </nav>
@@ -80,11 +77,10 @@
 
           <!-- Buttons BELOW the table -->
           <div class="action-buttons">
-            <button class="btn-action deposit" id="requestFundsBtn" onclick="window.location.href='request_funds.html'">Request funds</button>
+            <button class="btn-action deposit" id="requestFundsBtn">Request funds</button>
             <button class="btn-action withdraw" onclick="window.location.href='withdraw.html'">Withdraw funds</button>
-           <button class="btn-action transfer" onclick="window.location.href='transfer.html'">Transfer funds</button>
-        
-                      </div>
+            <button class="btn-action transfer" onclick="window.location.href='transfer.html'">Transfer funds</button>
+          </div>
 
 <!-- Platforms Table inside scrollable container -->
 <div class="table-container">
@@ -212,184 +208,242 @@ function togglePassword() {
 </script>
 
 
-<!-- fetched user info (replace with your DB data) --------------------------------------------------------------------------------------------------------->
+<!-- fetched user info --------------------------------------------------------------------------------------------------------->
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-  // 🔹 Safety check: Firebase loaded?
-  if (typeof firebase === "") {
-    console.error("Firebase SDK not loaded");
-    return;
-  }
+// 🔹 Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
+  authDomain: "black-dox.firebaseapp.com",
+  databaseURL: "https://black-dox.firebaseio.com",
+  projectId: "black-dox",
+  storageBucket: "black-dox.appspot.com",
+  messagingSenderId: "45035762443",
+  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
+  measurementId: "G-B7HB0T95TP"
+};
+// 🔹 Init
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-  const userNameEl = document.getElementById("userName");
-  const mainBalanceEl = document.getElementById("mainBalance");
+const viewBtn = document.getElementById("viewBtn");
 
-  if (!userNameEl || !mainBalanceEl) {
-    console.error("HTML elements not found");
-    return;
-  }
-
-  // 🔹 Watch login state
-  firebase.auth().onAuthStateChanged((user) => {
-    if (!user) {
-      // Not logged in → redirect
-      window.location.href = "login.html";
-      return;
-    }
-
+// 🔹 Watch login state
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
     const uid = user.uid;
-    const userRef = firebase.database().ref("users/" + uid);
 
-    userRef.once("value")
-      .then((snapshot) => {
+    try {
+      const snapshot = await get(child(ref(db), "userInfo/" + uid));
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
 
-        if (!snapshot.exists()) {
-          console.warn("No user data found in DB");
-          userNameEl.textContent = "Unknown User";
-          mainBalanceEl.textContent = "$0.00";
-          return;
-        }
-        var userData = snapshot.val();
+        // ✅ Update HTML elements
+        document.getElementById("userName").textContent = userData.fullName || "Loading...";
+        document.getElementById("mainBalance").textContent = `$${userData.mainBalance || "0.00"}`;
 
-              // ✅ IMPORTANT: use the exact DB field names
-        userNameEl.textContent = userData.name;
-
-        mainBalanceEl.textContent = `$${parseFloat(userData.mainBalance || 0).toFixed(2)}`;
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-        userNameEl.textContent = "Error";
-        mainBalanceEl.textContent = "$0.00";
-      });
-  });
-
+      } else {
+        console.log("No user data found");
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  } else {
+    // 🔹 Not logged in → send back to login
+    window.location.href = "login.html";
+  }
 });
 </script>
 
 
 
-<script>
-  const menuLink = document.getElementById("requestFundsLink");
-  const btn = document.getElementById("requestFundsBtn");
+<!-- fetched requested funds status --------------------------------------------------------------------------------------------------------->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
+  authDomain: "black-dox.firebaseapp.com",
+  databaseURL: "https://black-dox.firebaseio.com",
+  projectId: "black-dox",
+  storageBucket: "black-dox.appspot.com",
+  messagingSenderId: "45035762443",
+  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
+  measurementId: "G-B7HB0T95TP"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-</script> 
-<!-- fetched trading account data --------------------------------------------------------------------------------------------------------->
-<!-- fetched trading account data --------------------------------------------------------------------------------------------------------->
-<script>
-const tbody = document.querySelector(".account-table tbody");
-tbody.innerHTML = "";
+const menuLink = document.getElementById("requestFundsLink");
+const btn = document.getElementById("requestFundsBtn");
 
-// 🔹 Load current user's data (using the same logic as admin: load from /users, but filter for current user's email)
-firebase.auth().onAuthStateChanged(async (user) => {
-  if (!user) {
-    tbody.innerHTML = "<tr><td colspan='5'>You are not logged in</td></tr>";
+// Unified handler
+async function handleRequestFunds(e) {
+  e.preventDefault();
+
+  const savedEmail = localStorage.getItem("savedEmail");
+  const savedPassword = localStorage.getItem("savedPassword");
+
+  if (!savedEmail || !savedPassword) {
+    alert("You are not logged in. Please log in first.");
     return;
   }
 
   try {
-    // Get current user's email from Firebase Auth
-    const currentUserEmail = user.email;
-    console.log("Current user email:", currentUserEmail); // Debug
+    // 🔹 Auto login using local storage
+    const userCredential = await signInWithEmailAndPassword(auth, savedEmail, savedPassword);
+    const user = userCredential.user; // ALWAYS use this user object
 
-    if (!currentUserEmail) {
-      tbody.innerHTML = "<tr><td colspan='5'>No email found for user</td></tr>";
-      return;
+    console.log("User logged in:", user.uid);
+
+    // 🔹 Safely fetch only this user's request node
+    const userRef = ref(db, `usersRequestingFunds/${user.uid}`);
+    const snapshot = await get(userRef);
+
+    if (snapshot.exists()) {
+      console.log("Request exists:", snapshot.val());
+      window.location.href = "status.html";
+    } else {
+      console.log("No request found, redirecting to request page");
+      window.location.href = "request_funds.html";
     }
 
-    // Check for pending funds request
-    const requestRef = firebase.database().ref("usersRequestingFunds/" + user.uid);
-    const requestSnapshot = await requestRef.once("value");
-    const hasPendingRequest = requestSnapshot.exists();
-
-    // Load all users from /users (same as admin)
-    const usersRef = firebase.database().ref("users");
-    const usersSnapshot = await usersRef.once("value");
-
-    if (!usersSnapshot.exists()) {
-      tbody.innerHTML = "<tr><td colspan='5'>No trading accounts found</td></tr>";
-      return;
+  } catch (err) {
+    console.error("Error during login or fetching request:", err);
+    if (err.code && err.code.startsWith("auth/")) {
+      alert("Login failed. Please check your credentials.");
+    } else {
+      alert("Could not fetch request status. Please try again later.");
     }
+  }
+}
 
-    const users = usersSnapshot.val();
-    let userData = null;
-    let uid2 = null;
+menuLink.addEventListener("click", handleRequestFunds);
+btn.addEventListener("click", handleRequestFunds);
+</script>
 
-    // Find the account where email matches current user's email
-    for (const key in users) {
-      if (users[key].email === currentUserEmail) {
-        userData = users[key];
-        uid2 = key;
-        break;
-      }
-    }
 
-    console.log("Found user data:", userData); // Debug
-    console.log("UID2:", uid2); // Debug
-    console.log("Has pending request:", hasPendingRequest); // Debug
+<!-- fetched trading account data --------------------------------------------------------------------------------------------------------->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-    // Define "has account" as having userData with accountNumber
-    const hasAccount = userData && userData.accountNumber;
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyABQqlqvqqsrb2B7K8URa3Mj2BToXsabPQ",
+  authDomain: "black-dox.firebaseapp.com",
+  databaseURL: "https://black-dox.firebaseio.com",
+  projectId: "black-dox",
+  storageBucket: "black-dox.appspot.com",
+  messagingSenderId: "45035762443",
+  appId: "1:45035762443:web:4101a6774e6f4f1d15e80e",
+  measurementId: "G-B7HB0T95TP"
+};
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-    // If user has trading account or pending request, hide the request funds buttons
-    if (hasAccount || hasPendingRequest) {
-      const requestFundsLink = document.getElementById("requestFundsLink");
-      const requestFundsBtn = document.getElementById("requestFundsBtn");
-      if (requestFundsLink) requestFundsLink.style.display = "none";
-      if (requestFundsBtn) requestFundsBtn.style.display = "none";
-    }
+const tbody = document.querySelector(".account-table tbody");
+const userNameEl = document.getElementById("userName");
+const mainBalanceEl = document.getElementById("mainBalance");
+tbody.innerHTML = "";
+userNameEl.textContent = "Loading...";
+mainBalanceEl.textContent = "$0.00";
 
-    if (!hasAccount) {
+const localData = JSON.parse(localStorage.getItem("savedUserInfo") || "{}");
+const accountNumber = localData.accountNumber || "";
+const password = localData.password || "";
+const originalUserName = localData.fullName || "Loading...";
+const originalMainBalance = localData.mainBalance || "0.00";
+
+// Set profile name and main balance first
+userNameEl.textContent = originalUserName;
+mainBalanceEl.textContent = `$${originalMainBalance}`;
+
+async function fetchTradingAccount() {
+  if (!accountNumber || !password) {
+    tbody.innerHTML = "<tr><td colspan='5'>Please log in</td></tr>";
+    return;
+  }
+
+  try {
+    // Sign out silently
+    if (auth.currentUser) await signOut(auth);
+
+    // Login with trading account email
+    const email = accountNumber + "@fluxitrade.com";
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Fetch trading account data
+    const snapshot = await get(ref(db, `users/${user.uid}`));
+    if (!snapshot.exists()) {
       tbody.innerHTML = "<tr><td colspan='5'>No trading account yet</td></tr>";
       return;
     }
 
-    // Display the row (same as admin, but only one row)
-    const row = `
+    const data = snapshot.val();
+    const passwordId = `password-${user.uid}`;
+    const toggleId = `toggle-${user.uid}`;
+
+    // Update table only (do NOT change profile name)
+    tbody.innerHTML = `
       <tr>
+        <td>${data.accountNumber || ""}<br>ForexSecretWorld</td>
+        <td>$${data.balance ?? "0.00"}</td>
+        <td><button id="viewBtn" class="btn-action view">View</button></td>
         <td>
-          ${userData.name} ForexSecretWorld<br>
-          
+          <input type="password" value="${data.password || ""}" id="${passwordId}" readonly>
+          <button id="${toggleId}" style="border:none; background:none; cursor:pointer;">👁️</button>
         </td>
-        <td>$${Number(userData.balance || 0).toFixed(2)}</td>
-        <td>
-          <button id="viewBtn" class="btn-action view">View</button>
-        </td>
-        <td>
-          <input type="password" value="${userData.accountPassword || ""}" id="password-${uid2}" readonly>
-          <button onclick="togglePassword('password-${uid2}')" style="border:none; background:none; cursor:pointer;">
-            👁️
-          </button>
-        </td>
-        <td>${userData.appFee || "N/A"}</td>
+        <td>${data.appFee || "Unpaid"}</td>
       </tr>
     `;
-    tbody.insertAdjacentHTML("beforeend", row);
 
-    // 🔹 Check for Peter Nkosi and attach correct redirect
-    const fullName = (userData.name || "").trim().toLowerCase();
-    const viewBtn = document.getElementById("viewBtn");
-    viewBtn.onclick = () => {
-      if (fullName === "peter michael nkosi") {
-        window.location.href = "phases2.html";
-      } else {
-        window.location.href = "phases.html";
+    // Toggle password visibility
+    document.getElementById(toggleId).onclick = () => {
+      const field = document.getElementById(passwordId);
+      field.type = field.type === "password" ? "text" : "password";
+    };
+
+    // View button logic - check deposit amount from users node
+    document.getElementById("viewBtn").onclick = async () => {
+      try {
+        const userNode = await get(ref(db, `users/${user.uid}`));
+        const deposit = parseFloat(userNode.val()?.deposit ?? 0);
+
+        if (deposit === 500) {
+          window.location.href = "phases.html";
+        } else {
+          window.location.href = "phases2.html";
+        }
+      } catch (err) {
+        console.error("Error checking deposit:", err);
+        alert("Failed to check deposit amount.");
       }
     };
 
   } catch (err) {
-    console.error("Error loading user data:", err);
-    tbody.innerHTML = "<tr><td colspan='5'>Error loading user data</td></tr>";
+    console.error("Error fetching trading account:", err);
+    tbody.innerHTML = "<tr><td colspan='5'>Failed to load trading account</td></tr>";
   }
-});
+}
 
-// 🔹 Toggle password visibility
-window.togglePassword = function (id) {
-  const field = document.getElementById(id);
-  field.type = (field.type === "password") ? "text" : "password";
-}; </script>  
+// Run on page load
+fetchTradingAccount();
+</script>
+
 
 <!-- Download app --------------------------------------------------------------------------------------------------------->
 <script>
@@ -408,3 +462,137 @@ window.togglePassword = function (id) {
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
