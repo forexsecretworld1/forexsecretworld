@@ -12,10 +12,11 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
   
   <style>
-    body {
+    .body {
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
     }
     .terms-checkbox {
       width: 100%;
@@ -77,7 +78,6 @@
           <option value="ZA">South Africa</option>
           <option value="NG">Nigeria</option>
           <option value="IN">India</option>
-                    <option value="other">Other</option>
         </select>
         
         <input type="text" id="address" placeholder="Address line 1" required>
@@ -205,10 +205,19 @@
       }, 5000);
     }
 
+    // Flag to prevent multiple redirects
+    let redirecting = false;
+
     // Check if user can request funds on page load
     auth.onAuthStateChanged(async (user) => {
+      if (redirecting) return;
+      
       if (!user) {
-        window.location.href = "login.html";
+        redirecting = true;
+        showMessage("Please log in to request funds.", false);
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1500);
         return;
       }
 
@@ -216,6 +225,7 @@
         // Check if user already has a pending request
         const requestSnap = await db.ref(`usersRequestingFunds/${user.uid}`).once('value');
         if (requestSnap.exists()) {
+          redirecting = true;
           showMessage("You already have a pending request. Please wait for approval.", false);
           setTimeout(() => {
             window.location.href = "status.html";
@@ -229,6 +239,7 @@
           const uid2 = userInfoSnap.val();
           const tradingAccountSnap = await db.ref(`users/${uid2}`).once('value');
           if (tradingAccountSnap.exists()) {
+            redirecting = true;
             showMessage("You already have an active trading account.", false);
             setTimeout(() => {
               window.location.href = "dashboard.html";
@@ -236,6 +247,10 @@
             return;
           }
         }
+        
+        // If we reach here, user can see the form
+        console.log("User can request funds");
+        
       } catch (error) {
         console.error("Error checking user status:", error);
       }
@@ -250,59 +265,58 @@
       const user = auth.currentUser;
       if (!user) {
         showMessage("You must be logged in to submit a request!", false);
-        window.location.href = "login.html";
         return;
       }
 
       // Get user's password from database
-      const passwordSnap = await db.ref(`users/${user.uid}/password`).once('value');
-      const userPassword = passwordSnap.val();
-
-      if (!userPassword) {
-        showMessage("User password not found. Please contact support.", false);
-        return;
-      }
-
-      // Collect form data
-      const formData = {
-        uid: user.uid,
-        password: userPassword,
-        fullName: document.getElementById("fullName").value,
-        email: document.getElementById("email").value,
-        phone: document.getElementById("phone").value,
-        country: document.getElementById("country").value,
-        address: document.getElementById("address").value,
-        suburb: document.getElementById("suburb").value,
-        city: document.getElementById("city").value,
-        postalCode: document.getElementById("postalCode").value,
-        province: document.getElementById("province").value,
-        tradingExperience: document.getElementById("tradingExperience").value,
-        leverageKnowledge: document.getElementById("leverageKnowledge").value,
-        stopLossKnowledge: document.getElementById("stopLossKnowledge").value,
-        riskKnowledge: document.getElementById("riskKnowledge").value,
-        termsAccepted: document.getElementById("terms").checked,
-        submittedAt: Date.now(),
-        status: "Pending"
-      };
-
-      // Validate terms
-      if (!formData.termsAccepted) {
-        showMessage("You must agree to the Terms & Conditions.", false);
-        return;
-      }
-
-      // Check again for existing request (double-check)
-      const existingRequest = await db.ref(`usersRequestingFunds/${user.uid}`).once('value');
-      if (existingRequest.exists()) {
-        showMessage("You already have a pending request.", false);
-        setTimeout(() => {
-          window.location.href = "status.html";
-        }, 2000);
-        return;
-      }
-
-      // Save the request
       try {
+        const passwordSnap = await db.ref(`users/${user.uid}/password`).once('value');
+        const userPassword = passwordSnap.val();
+
+        if (!userPassword) {
+          showMessage("User password not found. Please contact support.", false);
+          return;
+        }
+
+        // Collect form data
+        const formData = {
+          uid: user.uid,
+          password: userPassword,
+          fullName: document.getElementById("fullName").value,
+          email: document.getElementById("email").value,
+          phone: document.getElementById("phone").value,
+          country: document.getElementById("country").value,
+          address: document.getElementById("address").value,
+          suburb: document.getElementById("suburb").value,
+          city: document.getElementById("city").value,
+          postalCode: document.getElementById("postalCode").value,
+          province: document.getElementById("province").value,
+          tradingExperience: document.getElementById("tradingExperience").value,
+          leverageKnowledge: document.getElementById("leverageKnowledge").value,
+          stopLossKnowledge: document.getElementById("stopLossKnowledge").value,
+          riskKnowledge: document.getElementById("riskKnowledge").value,
+          termsAccepted: document.getElementById("terms").checked,
+          submittedAt: Date.now(),
+          status: "Pending"
+        };
+
+        // Validate terms
+        if (!formData.termsAccepted) {
+          showMessage("You must agree to the Terms & Conditions.", false);
+          return;
+        }
+
+        // Check again for existing request (double-check)
+        const existingRequest = await db.ref(`usersRequestingFunds/${user.uid}`).once('value');
+        if (existingRequest.exists()) {
+          showMessage("You already have a pending request.", false);
+          setTimeout(() => {
+            window.location.href = "status.html";
+          }, 2000);
+          return;
+        }
+
+        // Save the request
         await db.ref(`usersRequestingFunds/${user.uid}`).set(formData);
         showMessage("✅ Your request has been submitted successfully!", true);
         
