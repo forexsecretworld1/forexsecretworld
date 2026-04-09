@@ -384,13 +384,13 @@ form.addEventListener("submit", function(e) {
 
         const requestRef = firebase.database().ref("usersRequestingFunds/" + user.uid);
 
-        // Check again before submitting
+        /* Check again before submitting
         requestRef.once("value")
           .then(snapshot => {
             if (snapshot.exists()) {
               window.location.href = "status.html";
               return;
-            }
+            }*/
 
             // Save request
             requestRef.set(formData)
